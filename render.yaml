@@ -1,0 +1,107 @@
+# ============================================================
+# ShopEase — Render Blueprint (render.yaml)
+# Deploy all 4 services individually on Render
+# https://render.com/docs/blueprint-spec
+# ============================================================
+
+services:
+  # ---- Backend API ----
+  - type: web
+    name: shopease-backend
+    runtime: node
+    region: oregon
+    plan: free
+    rootDir: backend
+    buildCommand: npm ci --omit=dev
+    startCommand: node server.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: DB_HOST
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_NAME
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        sync: false
+      - key: ADMIN_URL
+        sync: false
+      - key: CUSTOMER_SUPPORT_URL
+        sync: false
+      - key: GMAIL_USER
+        sync: false
+      - key: GMAIL_APP_PASSWORD
+        sync: false
+      - key: SMTP_FROM
+        sync: false
+
+  # ---- Frontend Storefront ----
+  - type: web
+    name: shopease-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: echo "Static site, no build needed"
+    staticPublishPath: .
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: SAMEORIGIN
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+  # ---- Admin Dashboard ----
+  - type: web
+    name: shopease-admin
+    runtime: static
+    rootDir: admin_dashboard
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: SAMEORIGIN
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        sync: false
+
+  # ---- Customer Support Portal ----
+  - type: web
+    name: shopease-customer-support
+    runtime: static
+    rootDir: customer_support
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: SAMEORIGIN
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        sync: false

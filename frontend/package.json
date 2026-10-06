@@ -1,0 +1,8 @@
+{
+  "name": "ecommerce-frontend",
+  "version": "1.0.0",
+  "description": "Static frontend for the e-commerce app",
+  "scripts": {
+    "start": "npx serve -l 3000 ."
+  }
+}

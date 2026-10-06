@@ -1,0 +1,10 @@
+# ============================================================
+# ShopEase Backend — .dockerignore
+# ============================================================
+node_modules
+npm-debug.log*
+.env
+*.log
+.git
+.gitignore
+*.md

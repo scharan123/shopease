@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "target": "es2023",
+    "lib": ["ES2023", "DOM"],
+    "module": "esnext",
+    "types": ["vite/client"],
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noFallthroughCasesInSwitch": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "ui/*": ["src/components/ui/*"],
+      "charts": ["src/components/charts/index.ts"],
+      "charts/*": ["src/components/charts/*"],
+      "layout/*": ["src/components/layout/*"],
+      "lib/*": ["src/lib/*"],
+      "context/*": ["src/context/*"],
+      "hooks/*": ["src/hooks/*"],
+      "pages/*": ["src/pages/*"]
+    },
+    "ignoreDeprecations": "6.0"
+  },
+  "include": ["src"]
+}

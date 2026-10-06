@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ShopEase - Premium Online Shopping</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='20' font-size='20'>🛒</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header" role="banner">
+    <div class="container header-inner">
+      <a href="#" class="logo" aria-label="ShopEase Home">
+        <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 6H3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2z"/>
+          <path d="M3.5 12h17"/>
+          <path d="M12 8v8"/>
+        </svg>
+        <span class="logo-text">ShopEase</span>
+      </a>
+
+      <nav class="nav" role="navigation" aria-label="Main navigation">
+        <a href="#" class="nav-link active" data-view="home" aria-current="page">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <span>Home</span>
+        </a>
+        <a href="#" class="nav-link" data-view="cart" style="display:none;">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          <span>Cart</span>
+          <span id="cart-count" class="cart-count" aria-label="Items in cart">0</span>
+        </a>
+        <a href="#" class="nav-link" data-view="wishlist" style="display:none;">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          <span>Wishlist</span>
+          <span id="wishlist-count" class="wishlist-count" aria-label="Items in wishlist">0</span>
+        </a>
+        <a href="#" class="nav-link" data-view="orders" style="display:none;">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          <span>Orders</span>
+        </a>
+        <a href="#" class="nav-link" data-view="referrals" style="display:none;">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+          <span>Refer & Earn</span>
+        </a>
+        <a href="#" class="nav-link" data-view="support">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 10h8"/><path d="M8 14h5"/></svg>
+          <span>Support</span>
+        </a>
+        <a href="#" class="nav-link" data-view="logout" style="display:none;">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          <span>Logout</span>
+          
+        </a>
+
+        <!-- Profile Dropdown (shown when logged in) -->
+        <div class="profile-wrapper" id="profile-wrapper" style="display:none;">
+          <button type="button" class="profile-trigger-btn" id="profile-trigger" aria-label="Profile menu" aria-expanded="false" aria-haspopup="true">
+            <div class="profile-avatar" id="profile-avatar">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+            <div class="profile-info">
+              <span class="profile-name" id="profile-name">Customer</span>
+              <svg class="profile-dropdown-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </button>
+          <div class="profile-dropdown" id="profile-dropdown" role="menu" aria-label="Profile menu" style="display:none;">
+            <div class="profile-dropdown-header">
+              <div class="profile-dropdown-avatar" id="profile-dropdown-avatar">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </div>
+              <div class="profile-dropdown-info">
+                <span class="profile-dropdown-name" id="profile-dropdown-name">Customer</span>
+                <span class="profile-dropdown-email" id="profile-dropdown-email">customer@email.com</span>
+              </div>
+            </div>
+            <div class="profile-dropdown-divider"></div>
+            <button type="button" class="profile-dropdown-item" id="profile-item" role="menuitem">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <span>Profile</span>
+            </button>
+            <button type="button" class="profile-dropdown-item" id="settings-item" role="menuitem">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 21.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              <span>Settings</span>
+            </button>
+            <div class="profile-dropdown-divider"></div>
+            <button type="button" class="profile-dropdown-item profile-dropdown-danger" id="signout-item" role="menuitem">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              <span>Sign out</span>
+            </button>
+          </div>
+        </div>
+
+        <a href="#" class="nav-link" data-view="auth" id="nav-login">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span>Account</span>
+        </a>
+      </nav>
+
+      <button class="mobile-menu-btn" aria-label="Toggle menu" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Mobile Nav Overlay -->
+  <div class="mobile-nav-overlay" aria-hidden="true">
+    <nav class="mobile-nav" role="navigation" aria-label="Mobile navigation">
+      <div class="mobile-nav-header">
+        <span class="mobile-nav-title">Menu</span>
+        <button class="mobile-nav-close" aria-label="Close menu">&times;</button>
+      </div>
+      <a href="#" class="mobile-nav-link active" data-view="home"><span>Home</span></a>
+      <a href="#" class="mobile-nav-link" data-view="cart" style="display:none;"><span>Cart <span id="mobile-cart-count" class="cart-count">0</span></span></a>
+      <a href="#" class="mobile-nav-link" data-view="wishlist" style="display:none;"><span>Wishlist <span id="mobile-wishlist-count" class="wishlist-count">0</span></span></a>
+      <a href="#" class="mobile-nav-link" data-view="orders" style="display:none;"><span>Orders</span></a>
+      <a href="#" class="mobile-nav-link" data-view="referrals" style="display:none;"><span>Refer & Earn</span></a>
+      <a href="#" class="mobile-nav-link" data-view="support"><span>Support</span></a>
+      <a href="#" class="mobile-nav-link" data-view="logout" style="display:none;"><span>Logout</span></a>
+
+      <!-- Mobile Profile Dropdown (shown when logged in) -->
+      <div class="profile-wrapper" id="mobile-profile-wrapper" style="display:none;">
+        <button type="button" class="profile-trigger-btn" id="mobile-profile-trigger" aria-label="Profile menu" aria-expanded="false" aria-haspopup="true">
+          <div class="profile-avatar" id="mobile-profile-avatar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <div class="profile-info">
+            <span class="profile-name" id="mobile-profile-name">Customer</span>
+            <svg class="profile-dropdown-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </button>
+        <div class="profile-dropdown" id="mobile-profile-dropdown" role="menu" aria-label="Profile menu" style="display:none;">
+          <div class="profile-dropdown-header">
+            <div class="profile-dropdown-avatar" id="mobile-profile-dropdown-avatar">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+            <div class="profile-dropdown-info">
+              <span class="profile-dropdown-name" id="mobile-profile-dropdown-name">Customer</span>
+              <span class="profile-dropdown-email" id="mobile-profile-dropdown-email">customer@email.com</span>
+            </div>
+          </div>
+          <div class="profile-dropdown-divider"></div>
+          <button type="button" class="profile-dropdown-item" id="mobile-profile-item" role="menuitem">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span>Profile</span>
+          </button>
+          <button type="button" class="profile-dropdown-item" id="mobile-settings-item" role="menuitem">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 21.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <span>Settings</span>
+          </button>
+          <div class="profile-dropdown-divider"></div>
+          <button type="button" class="profile-dropdown-item profile-dropdown-danger" id="mobile-signout-item" role="menuitem">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            <span>Sign out</span>
+          </button>
+        </div>
+      </div>
+
+      <a href="#" class="mobile-nav-link" data-view="auth" id="mobile-nav-login"><span>Account</span></a>
+    </nav>
+  </div>
+
+  <main class="main" role="main">
+    <!-- Auth Section -->
+    <section id="auth-section" class="section" aria-labelledby="auth-heading">
+      <div class="container">
+        <div class="auth-container">
+          <div class="auth-tabs" role="tablist" aria-label="Authentication">
+            <button class="auth-tab active" role="tab" aria-selected="true" aria-controls="login-panel" data-tab="login">Login</button>
+            <button class="auth-tab" role="tab" aria-selected="false" aria-controls="register-panel" data-tab="register">Register</button>
+          </div> 
+          <form id="login-form" class="auth-form" role="tabpanel" aria-labelledby="login-heading">
+            <h2 id="login-heading">Welcome Back</h2>
+            <p class="auth-subtitle">Sign in to continue shopping</p>
+            <div class="form-group">
+              <label for="login-email">Email Address</label>
+              <div class="input-wrapper">
+                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                <input type="email" id="login-email" name="email" required autocomplete="email" placeholder="Enter your email">
+              </div>
+            </div>
+<div class="form-group">
+                <label for="login-password">Password</label>
+                <div class="input-wrapper">
+                  <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  <input type="password" id="login-password" name="password" required autocomplete="current-password" placeholder="Enter password">
+                </div>
+              </div>
+              <div class="form-group forgot-password-row">
+                <button type="button" id="forgot-password-link" class="forgot-password-link">Forgot Password?</button>
+              </div>
+              <p id="login-error" class="error" role="alert" style="display:none;"></p>
+              <button type="submit" class="btn btn-primary btn-full">Sign In</button>
+            </form>
+
+          <form id="register-form" class="auth-form" role="tabpanel" aria-labelledby="register-heading" style="display:none;">
+            <h2 id="register-heading">Create Account</h2>
+            <p class="auth-subtitle">Join ShopEase for a better shopping experience</p>
+            <div class="form-group">
+              <label for="register-name">Full Name</label>
+              <div class="input-wrapper">
+                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <input type="text" id="register-name" name="name" required autocomplete="name" placeholder="Enter your full name">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="register-email">Email Address</label>
+              <div class="input-wrapper">
+                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                <input type="email" id="register-email" name="email" required autocomplete="email" placeholder="Enter your email">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="register-password">Password</label>
+              <div class="input-wrapper">
+                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <input type="password" id="register-password" name="password" required autocomplete="new-password" placeholder="Enter password" minlength="8">
+              </div>
+              <div class="password-strength" aria-live="polite">
+                <div class="strength-bar"><div class="strength-fill"></div></div>
+                <span class="strength-text">Password strength</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="register-confirm">Confirm Password</label>
+              <div class="input-wrapper">
+                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <input type="password" id="register-confirm" name="confirmPassword" required autocomplete="new-password" placeholder="Re-enter password" minlength="8">
+              </div>
+              <p id="confirm-error" class="error" style="display:none;"></p>
+            </div>
+            <p id="register-error" class="error" role="alert" style="display:none;"></p>
+            <button type="submit" class="btn btn-primary btn-full">Create Account</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- Forgot Password: Enter Email -->
+    <section id="forgot-section" class="section" style="display:none;" aria-labelledby="forgot-heading">
+      <div class="container">
+        <div class="auth-container">
+          <div class="auth-tabs" role="tablist" aria-label="Forgot password">
+            <button class="auth-tab active" role="tab" aria-selected="true" type="button">Forgot Password</button>
+          </div>
+          <form id="forgot-form" class="auth-form" novalidate>
+            <h2 id="forgot-heading">Reset Your Password</h2>
+            <p class="auth-subtitle">Enter the email address linked to your account and we'll send you a one-time password (OTP).</p>
+            <div class="form-group">
+              <label for="forgot-email">Email Address</label>
+              <div class="input-wrapper">
+                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                <input type="email" id="forgot-email" name="email" required autocomplete="email" placeholder="Enter your registered email">
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-full" id="forgot-send-btn">
+              <span class="btn-text">Send OTP</span>
+              <span class="btn-loading" style="display:none;"><span class="spinner-sm"></span> Sending...</span>
+            </button>
+            <p id="forgot-error" class="error" role="alert" style="display:none;"></p>
+            <p id="forgot-success" class="success" role="status" style="display:none;"></p>
+            <p class="auth-alt-link"><a href="#" id="forgot-back-link">Back to Login</a></p>
+          </form>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Forgot Password: Verify OTP -->
+    <section id="otp-section" class="section" style="display:none;" aria-labelledby="otp-heading">
+      <div class="container">
+        <div class="auth-container">
+          <div class="auth-tabs" role="tablist" aria-label="Verify OTP">
+            <button class="auth-tab active" role="tab" aria-selected="true" type="button">Verify OTP</button>
+          </div>
+          <form id="otp-form" class="auth-form" novalidate>
+            <h2 id="otp-heading">Enter OTP</h2>
+            <p class="auth-subtitle">We sent a 6-digit code to <strong id="otp-email-display"></strong>. It expires in 5 minutes.</p>
+            <div class="form-group">
+              <label for="otp-input">One-Time Password</label>
+              <div class="input-wrapper">
+                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <input type="text" id="otp-input" name="otp" required autocomplete="one-time-code" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" placeholder="Enter 6-digit OTP">
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-full" id="otp-verify-btn">
+              <span class="btn-text">Verify OTP</span>
+              <span class="btn-loading" style="display:none;"><span class="spinner-sm"></span> Verifying...</span>
+            </button>
+            <p id="otp-error" class="error" role="alert" style="display:none;"></p>
+            <div class="otp-resend-row">
+              <button type="button" id="otp-resend-btn" class="otp-resend-btn" disabled>Resend OTP</button>
+              <span id="otp-resend-timer" class="otp-resend-timer" role="status" aria-live="polite"></span>
+            </div>
+            <p class="auth-alt-link"><a href="#" id="otp-back-link">Back to Login</a></p>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- Forgot Password: Create New Password -->
+    <section id="reset-section" class="section" style="display:none;" aria-labelledby="reset-heading">
+      <div class="container">
+        <div class="auth-container">
+          <div class="auth-tabs" role="tablist" aria-label="Create new password">
+            <button class="auth-tab active" role="tab" aria-selected="true" type="button">New Password</button>
+          </div>
+          <form id="reset-form" class="auth-form" novalidate>
+            <h2 id="reset-heading">Create New Password</h2>
+            <p class="auth-subtitle">Set a new password for <strong id="reset-email-display"></strong>.</p>
+            <div class="form-group">
+              <label for="reset-password">New Password</label>
+              <div class="input-wrapper">
+                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <input type="password" id="reset-password" name="new_password" required autocomplete="new-password" placeholder="Enter new password (min 8 characters)" minlength="8">
+              </div>
+              <div class="password-strength" aria-live="polite">
+                <div class="strength-bar"><div class="strength-fill" id="reset-strength-fill"></div></div>
+                <span class="strength-text" id="reset-strength-text">Password strength</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="reset-confirm">Confirm New Password</label>
+              <div class="input-wrapper">
+                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <input type="password" id="reset-confirm" name="confirm_password" required autocomplete="new-password" placeholder="Re-enter new password" minlength="8">
+              </div>
+              <p id="reset-confirm-error" class="error" style="display:none;"></p>
+            </div>
+            <button type="submit" class="btn btn-primary btn-full" id="reset-password-btn">
+              <span class="btn-text">Reset Password</span>
+              <span class="btn-loading" style="display:none;"><span class="spinner-sm"></span> Updating...</span>
+            </button>
+            <p id="reset-error" class="error" role="alert" style="display:none;"></p>
+            <p class="auth-alt-link"><a href="#" id="reset-back-link">Back to Login</a></p>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- Home Section -->
+    <section id="home-section" class="section" style="display:none;" aria-labelledby="home-heading">
+      <div class="container">
+        <!-- Hero Carousel -->
+        <div class="hero-carousel" id="hero-carousel" role="region" aria-label="Featured products carousel">
+          <div class="carousel-track" id="carousel-track">
+            <!-- Slides injected by JS -->
+          </div>
+          <button class="carousel-btn carousel-prev" aria-label="Previous slide" id="carousel-prev">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <button class="carousel-btn carousel-next" aria-label="Next slide" id="carousel-next">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+          <div class="carousel-dots" id="carousel-dots" role="tablist" aria-label="Carousel indicators"></div>
+        </div>
+
+        <!-- Search & Categories -->
+        <div class="search-categories" role="search" aria-label="Product search and categories">
+          <div class="search-wrapper">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="search" id="search-input" class="search-input" placeholder="Search products..." aria-label="Search products" autocomplete="off">
+            <div class="search-suggestions" id="search-suggestions" role="listbox" aria-label="Search suggestions" style="display:none;"></div>
+          </div>
+          <div class="categories-scroll" id="categories-scroll" role="navigation" aria-label="Product categories">
+            <button class="category-pill active" data-category="all" role="tab" aria-selected="true">All</button>
+            <!-- Categories injected by JS -->
+          </div>
+        </div>
+
+        <!-- PIN Code Delivery Filter -->
+        <div class="pin-filter">
+          <div class="pin-filter-entry" id="pin-filter-entry">
+            <svg class="pin-filter-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <div class="pin-filter-inputs">
+              <label class="pincode-label" for="home-pin-code">Check delivery to your PIN code</label>
+              <div class="pincode-input-row">
+                <input type="text" id="home-pin-code" class="pincode-input" inputmode="numeric" maxlength="6" placeholder="Enter 6-digit PIN code" autocomplete="postal-code" aria-label="Enter 6-digit PIN code">
+                <button type="button" class="btn btn-primary btn-sm pincode-check-btn" id="home-pin-check">Check Delivery</button>
+              </div>
+              <p class="pincode-result" id="home-pin-result" data-valid="unknown" role="status"></p>
+            </div>
+          </div>
+          <div class="pin-applied" id="pin-applied" style="display:none;">
+            <div class="pin-applied-info-wrap">
+              <span class="pin-applied-info">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                <span>Delivering to <strong id="pin-applied-value"></strong></span>
+              </span>
+              <span class="pin-applied-location" id="pin-applied-location"></span>
+              <span class="pin-applied-detail" id="pin-applied-detail"></span>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" id="pin-change-btn">Change PIN Code</button>
+          </div>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="section-header">
+          <h2 id="home-heading">All Products</h2>
+          <div class="product-count" id="product-count" aria-live="polite"></div>
+        </div>
+        <div id="products-grid" class="products-grid" role="list" aria-label="Products"></div>
+        <div id="products-loading" class="loading-state" style="display:none;" aria-live="polite">
+          <div class="spinner"></div>
+          <p>Loading products...</p>
+        </div>
+        <p id="no-products" class="empty-state" style="display:none;">No products found matching your criteria.</p>
+      </div>
+    </section>
+
+    <!-- Product Detail Page -->
+    <section id="product-detail-section" class="section" style="display:none;" aria-labelledby="product-detail-heading">
+      <div class="container">
+        <button type="button" class="icon-back-btn" data-view="home" aria-label="Go back">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          Back
+        </button>
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <ol class="breadcrumb-list">
+            <li><a href="#" data-view="home">Home</a></li>
+            <li class="breadcrumb-separator" aria-hidden="true">/</li>
+            <li><a href="#" id="breadcrumb-category" data-view="home"></a></li>
+            <li class="breadcrumb-separator" aria-hidden="true">/</li>
+            <li id="breadcrumb-product" aria-current="page"></li>
+          </ol>
+        </nav>
+        <div id="product-detail-content" class="product-detail-page"></div>
+      </div>
+    </section>
+
+    <!-- Cart Section -->
+    <section id="cart-section" class="section" style="display:none;" aria-labelledby="cart-heading">
+      <div class="container">
+        <header class="section-header">
+          <div class="section-header-left">
+            <button type="button" class="icon-back-btn" data-view="home" aria-label="Go back">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+              Back
+            </button>
+            <h2 id="cart-heading">Shopping Cart</h2>
+          </div>
+        </header>
+        <div class="cart-layout">
+          <div class="cart-items-container" id="cart-items-container">
+            <div id="cart-delivery-notice" class="cart-delivery-notice" style="display:none;" role="alert"></div>
+            <div id="cart-items" class="cart-items" role="list" aria-label="Cart items"></div>
+            <div id="cart-empty" class="empty-state cart-empty" style="display:none;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                     <h3> Your cart is empty</h3>
+              
+              <a href="#" class="btn btn-primary" data-view="home">Continue Shopping</a>
+            </div>
+          </div>
+          <aside class="cart-summary" id="cart-summary" style="display:none;">
+            <h3>Order Summary</h3>
+            <div class="summary-lines">
+              <div class="summary-row"><span>Subtotal</span><span id="cart-subtotal">₹0.00</span></div>
+              <div class="summary-row"><span>Shopping</span><span class="free">Free</span></div>
+              <div class="summary-row total"><span>Total</span><span id="cart-total">₹0.00</span></div>
+            </div>
+            <button id="checkout-btn" class="btn btn-primary btn-full">Proceed to Checkout</button>
+            <p class="secure-note">Secure checkout • 30-day returns • Free shipping</p>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- Wishlist Section -->
+    <section id="wishlist-section" class="section" style="display:none;" aria-labelledby="wishlist-heading">
+      <div class="container">
+        <header class="section-header">
+          <div class="section-header-left">
+            <button type="button" class="icon-back-btn" data-view="home" aria-label="Go back">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+              Back
+            </button>
+            <h2 id="wishlist-heading">My Wishlist</h2>
+          </div>
+        </header>
+        <div id="wishlist-items" class="wishlist-grid" role="list" aria-label="Wishlist items"></div>
+        <div id="wishlist-empty" class="empty-state" style="display:none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          <h3>Your wishlist is empty</h3>
+          
+          <a href="#" class="btn btn-primary" data-view="home">Browse Products</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Checkout Section -->
+    <section id="checkout-section" class="section" style="display:none;" aria-labelledby="checkout-heading">
+      <div class="container">
+        <header class="section-header">
+          <div class="section-header-left">
+            <button type="button" class="icon-back-btn" data-view="cart" aria-label="Go back to cart">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+              Back
+            </button>
+            <h2 id="checkout-heading">Checkout</h2>
+          </div>
+        </header>
+        <form id="checkout-form" class="checkout-form" novalidate>
+          <div class="checkout-grid">
+            <div class="checkout-main">
+              <fieldset>
+                <legend>Shipping Address</legend>
+                <div class="form-group">
+                  <label for="shipping-name">Full Name</label>
+                  <input type="text" id="shipping-name" name="name" required autocomplete="shipping name">
+                </div>
+                <div class="form-group">
+                  <label for="shipping-email">Email</label>
+                  <input type="email" id="shipping-email" name="email" required autocomplete="shipping email">
+                </div>
+                <div class="form-group">
+                  <label for="shipping-phone">Phone</label>
+                  <input type="tel" id="shipping-phone" name="phone" required autocomplete="shipping tel" placeholder="Enter your phone number" pattern="[0-9+ ]{10,14}">
+                </div>
+<div class="form-group">
+                <label for="shipping-address">Address</label>
+                <textarea id="shipping-address" name="address" rows="3" required placeholder="Enter your full address" autocomplete="shipping street-address"></textarea>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="shipping-city">City</label>
+                  <input type="text" id="shipping-city" name="city" required autocomplete="shipping city" placeholder="Enter your city">
+                </div>
+                <div class="form-group">
+                  <label for="shipping-zip">PIN Code</label>
+                  <input type="text" id="shipping-zip" name="zip" required autocomplete="shipping postal-code" placeholder="Enter 6-digit PIN code" pattern="[0-9]{6}" maxlength="6">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="shipping-state">State</label>
+                  <select id="shipping-state" name="state" required autocomplete="shipping address-level1">
+                    <option value="">Select State</option>
+                    <option>Andhra Pradesh</option><option>Arunachal Pradesh</option><option>Assam</option><option>Bihar</option><option>Chhattisgarh</option><option>Goa</option><option>Gujarat</option><option>Haryana</option><option>Himachal Pradesh</option><option>Jharkhand</option><option>Karnataka</option><option>Kerala</option><option>Madhya Pradesh</option><option>Maharashtra</option><option>Manipur</option><option>Meghalaya</option><option>Mizoram</option><option>Nagaland</option><option>Odisha</option><option>Punjab</option><option>Rajasthan</option><option>Sikkim</option><option>Tamil Nadu</option><option>Telangana</option><option>Tripura</option><option>Uttar Pradesh</option><option>Uttarakhand</option><option>West Bengal</option><option>Delhi</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="shipping-country">Country</label>
+                  <select id="shipping-country" name="country" required autocomplete="shipping country">
+                    <option value="IN" selected>India</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Saved Addresses Section -->
+              <fieldset id="saved-addresses-section" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border);">
+                <legend>Saved Addresses</legend>
+                <div id="saved-addresses-list" class="saved-addresses-list"></div>
+                <button type="button" class="btn btn-secondary btn-sm" id="add-new-address-btn" style="margin-top: 12px;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 6px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  + Add New Address
+                </button>
+              </fieldset>
+            </fieldset>
+
+              <aside class="checkout-summary">
+              <h3>Order Summary</h3>
+              <div id="checkout-items" class="checkout-items"></div>
+              <div class="checkout-delivery-check">
+                <label class="pincode-label" for="checkout-pin-code">Check Delivery Availability</label>
+                <div class="pincode-input-row">
+                  <input type="text" id="checkout-pin-code" class="pincode-input" inputmode="numeric" maxlength="6" placeholder="Enter 6-digit PIN code" autocomplete="off" aria-label="Enter 6-digit PIN code">
+                  <button type="button" class="btn btn-primary btn-sm pincode-check-btn" id="checkout-pin-check">Check</button>
+                </div>
+                <p class="pincode-result" id="checkout-pin-result" data-valid="unknown" role="status"></p>
+                <div class="availability-list" id="checkout-availability-list"></div>
+              </div>
+              <!-- Coupon Section -->
+              <div class="checkout-coupon" style="margin: 16px 0; padding: 12px; border: 1px solid var(--border); border-radius: 8px;">
+                <label class="pincode-label" style="display: block; margin-bottom: 8px;">Have a coupon?</label>
+                <div class="pincode-input-row" style="gap: 8px;">
+                  <input type="text" id="checkout-coupon-code" class="pincode-input" style="flex: 1; text-transform: uppercase;" placeholder="Enter coupon code" autocomplete="off" aria-label="Enter coupon code" maxlength="20">
+                  <button type="button" class="btn btn-primary btn-sm" id="checkout-coupon-apply">Apply</button>
+                </div>
+                <p class="pincode-result" id="checkout-coupon-result" data-valid="unknown" role="status" style="margin-top: 8px;"></p>
+                <div id="checkout-coupon-display"></div>
+              </div>
+              <div class="summary-lines">
+                <div class="summary-row"><span>Subtotal</span><span id="checkout-subtotal">₹0.00</span></div>
+                <div class="summary-row" id="checkout-discount-row" style="display: none;"><span>Coupon Discount</span><span id="checkout-discount" style="color: var(--success);">-₹0.00</span></div>
+                <div class="summary-row" id="checkout-quantity-discount-row" style="display: none;"><span>Quantity Discount</span><span id="checkout-quantity-discount" style="color: var(--success);">-₹0.00</span></div>
+                <div class="summary-row"><span>Shipping</span><span class="free">Free</span></div>
+                <div class="summary-row"><span>Tax</span><span id="checkout-tax">₹0.00</span></div>
+                <div class="summary-row total"><span>Total</span><span id="checkout-total">₹0.00</span></div>
+              </div>
+              <p id="checkout-delivery-block" class="error checkout-delivery-block" role="alert" style="display:none;">Please remove unavailable products or change your PIN code before placing the order.</p>
+              <button type="submit" class="btn btn-primary btn-full" id="place-order-btn">
+                <span class="btn-text">Place Order</span>
+                <span class="btn-loading" style="display:none;"><span class="spinner-sm"></span> Processing...</span>
+              </button>
+            </aside>
+          </div>
+
+          <p id="checkout-error" class="error" role="alert" style="display:none;"></p>
+          <p id="checkout-success" class="success" role="status" style="display:none;"></p>
+        </form>
+      </div>
+    </section>
+
+    <!-- Refer & Earn Section -->
+    <section id="referrals-section" class="section" style="display:none;" aria-labelledby="referrals-heading">
+      <div class="container">
+        <header class="section-header">
+          <div class="section-header-left">
+            <button type="button" class="icon-back-btn" data-view="home" aria-label="Go back">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+              Back
+            </button>
+            <h2 id="referrals-heading">Refer & Earn</h2>
+          </div>
+        </header>
+        
+        <div class="referrals-container">
+          <!-- Hero Section -->
+          <div class="referrals-hero">
+            <div class="referrals-hero-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="18" cy="5" r="3"></circle>
+                <circle cx="6" cy="12" r="3"></circle>
+                <circle cx="18" cy="19" r="3"></circle>
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+              </svg>
+            </div>
+            <h3>Invite your friends and earn rewards!</h3>
+            <p>Share your unique referral link. When your friend signs up and places their first order, you both get rewards.</p>
+          </div>
+
+          <!-- Referral Code Card -->
+          <div class="referral-code-card">
+            <div class="referral-code-header">
+              <span class="referral-code-label">Your Referral Code</span>
+            </div>
+            <div class="referral-code-display" id="referral-code-display">
+              <span class="referral-code-value" id="referral-code-value">--</span>
+              <div class="referral-code-actions">
+                <button type="button" class="btn btn-secondary btn-sm" id="copy-code-btn" aria-label="Copy referral code">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                  Copy Code
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Referral Link Card -->
+          <div class="referral-link-card">
+            <div class="referral-link-header">
+              <span class="referral-link-label">Your Referral Link</span>
+            </div>
+            <div class="referral-link-display">
+              <div class="referral-link-input-wrapper">
+                <input type="text" id="referral-link-input" class="referral-link-input" readonly aria-label="Your referral link" placeholder="Loading...">
+                <button type="button" class="btn btn-secondary btn-sm" id="copy-link-btn" aria-label="Copy referral link">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                  Copy Link
+                </button>
+              </div>
+              <button type="button" class="btn btn-primary" id="share-btn" style="margin-top: var(--space-3);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                Share
+              </button>
+            </div>
+          </div>
+
+          <!-- Stats Grid -->
+          <div class="referral-stats" id="referral-stats">
+            <div class="stat-card">
+              <span class="stat-value" id="stat-total-referrals">0</span>
+              <span class="stat-label">Total Referrals</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-value" id="stat-successful-referrals">0</span>
+              <span class="stat-label">Successful Referrals</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-value" id="stat-pending-referrals">0</span>
+              <span class="stat-label">Pending Referrals</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-value" id="stat-rewards-earned">₹0.00</span>
+              <span class="stat-label">Rewards Earned</span>
+            </div>
+          </div>
+
+          <!-- Referral History -->
+          <div class="referral-history-section">
+            <h3>Referral History</h3>
+            <div class="referral-history-table-container">
+              <table class="referral-history-table" id="referral-history-table">
+                <thead>
+                  <tr>
+                    <th>Friend</th>
+                    <th>Status</th>
+                    <th>Reward</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+                <tbody id="referral-history-body">
+                  <!-- Populated by JS -->
+                </tbody>
+              </table>
+              <div id="referral-history-empty" class="empty-state" style="display:none;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                <h3>No referrals yet</h3>
+                <p>Share your referral link to start earning rewards!</p>
+              </div>
+              <div id="referral-history-loading" class="loading-state" style="display:none;">
+                <div class="spinner"></div>
+                <p>Loading referral history...</p>
+              </div>
+            </div>
+            
+            <!-- Pagination -->
+            <div class="referral-pagination" id="referral-pagination" style="display:none;">
+              <button type="button" class="btn btn-secondary btn-sm" id="referral-prev-page" disabled>Previous</button>
+              <span class="pagination-info" id="referral-pagination-info">Page 1 of 1</span>
+              <button type="button" class="btn btn-secondary btn-sm" id="referral-next-page" disabled>Next</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Orders Section -->
+    <section id="orders-section" class="section" style="display:none;" aria-labelledby="orders-heading">
+      <div class="container">
+        <header class="section-header">
+          <div class="section-header-left">
+            <button type="button" class="icon-back-btn" data-view="home" aria-label="Go back">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+              Back
+            </button>
+            <h2 id="orders-heading">My Orders</h2>
+          </div>
+        </header>
+        <div id="orders-list" class="orders-list" role="list" aria-label="Order history"></div>
+        <div id="orders-loading" class="loading-state" style="display:none;">
+          <div class="spinner"></div>
+          <p>Loading orders...</p>
+        </div>
+        <div id="no-orders" class="empty-state" style="display:none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          <h3>No orders yet</h3>
+          <p>When you place an order, it will appear here.</p>
+          <a href="#" class="btn btn-primary" data-view="home">Start Shopping</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Support Section -->
+    <section id="support-section" class="section" style="display:none;" aria-labelledby="support-heading">
+      <div class="container">
+        <header class="support-dashboard-header" role="banner">
+          <div class="support-header-left">
+            <button type="button" class="icon-back-btn" data-view="home" aria-label="Go back">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+              Back
+            </button>
+            <div class="support-header-titles">
+              <h2 id="support-heading">Customer Support</h2>
+              <p class="support-subtitle">Manage your support requests</p>
+            </div>
+          </div>
+          <div class="support-header-right">
+            <button type="button" class="theme-toggle-btn" id="support-theme-toggle" aria-label="Toggle theme">
+              <svg class="theme-icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+              <svg class="theme-icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </button>
+            <div class="notification-wrapper" id="support-notification-wrapper">
+              <button type="button" class="notification-bell-btn" id="support-notification-bell" aria-label="Notifications" aria-expanded="false" aria-haspopup="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                <span class="notification-badge" id="support-notification-badge" aria-hidden="true">0</span>
+              </button>
+              <div class="notification-dropdown" id="support-notification-dropdown" role="menu" aria-label="Notifications" style="display:none;">
+                <div class="notification-dropdown-header">
+                  <h3>Notifications</h3>
+                  <button type="button" class="mark-all-read-btn" id="support-mark-all-read" aria-label="Mark all as read">Mark all as read</button>
+                </div>
+                <div class="notification-divider"></div>
+                <div class="notification-list" id="support-notification-list" role="listbox">
+                  <div class="notification-empty" style="display:none;">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                    <p class="notification-empty-title">No notifications</p>
+                    <p class="notification-empty-text">You don't have any notifications yet.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="profile-wrapper" id="support-profile-wrapper">
+              <button type="button" class="profile-trigger-btn" id="support-profile-trigger" aria-label="Profile menu" aria-expanded="false" aria-haspopup="true">
+                <div class="profile-avatar" id="support-profile-avatar">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </div>
+                <div class="profile-info">
+                  <span class="profile-name" id="support-profile-name">Customer</span>
+                  <svg class="profile-dropdown-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+              </button>
+              <div class="profile-dropdown" id="support-profile-dropdown" role="menu" aria-label="Profile menu" style="display:none;">
+                <div class="profile-dropdown-header">
+                  <div class="profile-dropdown-avatar" id="support-dropdown-avatar">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  </div>
+                  <div class="profile-dropdown-info">
+                    <span class="profile-dropdown-name" id="support-dropdown-name">Customer</span>
+                    <span class="profile-dropdown-email" id="support-dropdown-email">customer@email.com</span>
+                  </div>
+                </div>
+                <div class="profile-dropdown-divider"></div>
+                <button type="button" class="profile-dropdown-item" id="support-profile-item" role="menuitem">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  <span>Profile</span>
+                </button>
+                <button type="button" class="profile-dropdown-item" id="support-settings-item" role="menuitem">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 21.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                  <span>Settings</span>
+                </button>
+                <div class="profile-dropdown-divider"></div>
+                <button type="button" class="profile-dropdown-item profile-dropdown-danger" id="support-signout-item" role="menuitem">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                  <span>Sign out</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </header>
+        <div class="support-layout">
+          <div class="support-info">
+            <h3>We're here to help</h3>
+            <p>Have a question or need assistance? Fill out the form below and our support team will get back to you as soon as possible.</p>
+            <div class="support-channels">
+              <div class="support-channel">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                <div>
+                  <strong>Email</strong>
+                  <span>support@shopease.com</span>
+                </div>
+              </div>
+              <div class="support-channel">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <div>
+                  <strong>Phone</strong>
+                  <span>+91 1800-XXX-XXXX</span>
+                </div>
+              </div>
+              <div class="support-channel">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+                <div>
+                  <strong>Hours</strong>
+                  <span>Mon-Fri 9am-6pm IST</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <form id="support-form" class="support-form" novalidate>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="support-name">Full Name <span class="required">*</span></label>
+                <div class="input-wrapper">
+                  <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  <input type="text" id="support-name" name="name" required autocomplete="name" placeholder="Enter your full name">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="support-email">Email <span class="required">*</span></label>
+                <div class="input-wrapper">
+                  <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                  <input type="email" id="support-email" name="email" required autocomplete="email" placeholder="Enter your email">
+                </div>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="support-mobile">Mobile Number <span class="required">*</span></label>
+                <div class="input-wrapper">
+                  <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  <input type="tel" id="support-mobile" name="mobile" required autocomplete="tel" placeholder="Enter your 10-digit mobile number" pattern="[0-9+\-\s]{10,15}">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="support-type">Support Type <span class="required">*</span></label>
+                <div class="input-wrapper">
+                  <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                  <select id="support-type" name="support_type" required>
+                    <option value="">Select support type</option>
+                    <option value="order_issue">Order Issue</option>
+                    <option value="payment_issue">Payment Issue</option>
+                    <option value="delivery_issue">Delivery Issue</option>
+                    <option value="return_refund">Return / Refund</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <!-- Order selector – shown only when support type is order_issue -->
+            <div class="form-group" id="order-selector-group" style="display:none;">
+              <label for="support-order-id">Select Order <span class="required">*</span></label>
+              <div class="input-wrapper">
+                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                <select id="support-order-id" name="order_id">
+                  <option value="">— Select the order with the issue —</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="support-description">Description <span class="required">*</span></label>
+              <div class="input-wrapper">
+                <textarea id="support-description" name="description" rows="6" placeholder="Describe your issue or question here..."></textarea>
+              </div>
+            </div>
+            <p id="support-error" class="error" role="alert" style="display:none;"></p>
+            <p id="support-success" class="success" role="status" style="display:none;"></p>
+            <button type="submit" class="btn btn-primary btn-full" id="support-submit-btn">
+              <span class="btn-text">Send Message</span>
+              <span class="btn-loading" style="display:none;"><span class="spinner-sm"></span> Sending...</span>
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- Order Detail Modal -->
+    <div id="order-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-order-title" style="display:none;">
+      <div class="modal-backdrop" tabindex="-1"></div>
+      <div class="modal-content order-modal-content">
+        <button class="modal-close" aria-label="Close order details">&times;</button>
+        <div id="order-detail" class="order-detail"></div>
+      </div>
+    </div>
+
+    <!-- Add New Address Modal -->
+    <div id="address-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="address-modal-title" style="display:none;">
+      <div class="modal-backdrop" tabindex="-1"></div>
+      <div class="modal-content" style="max-width: 520px;">
+        <button class="modal-close" aria-label="Close address form">&times;</button>
+        <h2 id="address-modal-title">Add New Address</h2>
+        <form id="address-form" novalidate>
+          <div class="form-group">
+            <label for="address-name">Full Name <span class="required">*</span></label>
+            <input type="text" id="address-name" name="name" required autocomplete="shipping name" placeholder="Enter your full name">
+          </div>
+          <div class="form-group">
+            <label for="address-phone">Phone <span class="required">*</span></label>
+            <input type="tel" id="address-phone" name="phone" required autocomplete="shipping tel" placeholder="Enter your phone number" pattern="[0-9+ ]{10,14}">
+          </div>
+          <div class="form-group">
+            <label for="address-line">Address <span class="required">*</span></label>
+            <textarea id="address-line" name="address_line" rows="3" required placeholder="Enter your full address" autocomplete="shipping street-address"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="address-area">Area / Locality</label>
+            <input type="text" id="address-area" name="area" placeholder="Enter area/locality" autocomplete="shipping address-level2">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="address-city">City <span class="required">*</span></label>
+              <input type="text" id="address-city" name="city" required autocomplete="shipping city" placeholder="Enter your city">
+            </div>
+            <div class="form-group">
+              <label for="address-pincode">PIN Code <span class="required">*</span></label>
+              <input type="text" id="address-pincode" name="pincode" required autocomplete="shipping postal-code" placeholder="Enter 6-digit PIN code" pattern="[0-9]{6}" maxlength="6" inputmode="numeric">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="address-state">State <span class="required">*</span></label>
+              <select id="address-state" name="state" required autocomplete="shipping address-level1">
+                <option value="">Select State</option>
+                <option>Andhra Pradesh</option><option>Arunachal Pradesh</option><option>Assam</option><option>Bihar</option><option>Chhattisgarh</option><option>Goa</option><option>Gujarat</option><option>Haryana</option><option>Himachal Pradesh</option><option>Jharkhand</option><option>Karnataka</option><option>Kerala</option><option>Madhya Pradesh</option><option>Maharashtra</option><option>Manipur</option><option>Meghalaya</option><option>Mizoram</option><option>Nagaland</option><option>Odisha</option><option>Punjab</option><option>Rajasthan</option><option>Sikkim</option><option>Tamil Nadu</option><option>Telangana</option><option>Tripura</option><option>Uttar Pradesh</option><option>Uttarakhand</option><option>West Bengal</option><option>Delhi</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="address-country">Country</label>
+              <select id="address-country" name="country" required autocomplete="shipping country">
+                <option value="IN" selected>India</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="address-set-default" name="is_default">
+              <span>Set as default address</span>
+            </label>
+          </div>
+          <p id="address-error" class="error" role="alert" style="display:none;"></p>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" id="address-cancel">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="address-save">
+              <span class="btn-text">Save Address</span>
+              <span class="btn-loading" style="display:none;"><span class="spinner-sm"></span> Saving...</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <!-- Profile Section -->
+  <section id="profile-section" class="section" style="display:none;" aria-labelledby="profile-heading">
+    <div class="container">
+      <header class="section-header">
+        <div class="section-header-left">
+          <button type="button" class="icon-back-btn" data-view="home" aria-label="Go back">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+            Back
+          </button>
+          <h2 id="profile-heading">My Profile</h2>
+        </div>
+      </header>
+      <div class="profile-container">
+        <div class="profile-card">
+          <div class="profile-header">
+            <div class="profile-avatar-large" id="profile-avatar-large">
+              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+            <div class="profile-header-info">
+              <h3 id="profile-display-name">Customer Name</h3>
+              <p id="profile-display-email">customer@email.com</p>
+            </div>
+          </div>
+          <div class="profile-details">
+            <div class="profile-detail-row">
+              <span class="profile-detail-label">Full Name</span>
+              <span class="profile-detail-value" id="profile-detail-name">Customer Name</span>
+            </div>
+            <div class="profile-detail-row">
+              <span class="profile-detail-label">Email Address</span>
+              <span class="profile-detail-value" id="profile-detail-email">customer@email.com</span>
+            </div>
+            <div class="profile-detail-row">
+              <span class="profile-detail-label">Member Since</span>
+              <span class="profile-detail-value" id="profile-detail-joined">--</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Settings Section -->
+  <section id="settings-section" class="section" style="display:none;" aria-labelledby="settings-heading">
+    <div class="container">
+      <header class="section-header">
+        <div class="section-header-left">
+          <button type="button" class="icon-back-btn" data-view="home" aria-label="Go back">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+            Back
+          </button>
+          <h2 id="settings-heading">Settings</h2>
+        </div>
+      </header>
+      <div class="settings-container">
+        <div class="settings-card">
+          <h3>Account Settings</h3>
+          <div class="settings-group">
+            <div class="setting-item">
+              <div class="setting-info">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <div>
+                  <span class="setting-label">Change Password</span>
+                  <span class="setting-description">Update your account password</span>
+                </div>
+              </div>
+              <button type="button" class="btn btn-secondary btn-sm" id="change-password-btn">Change</button>
+            </div>
+            <div class="setting-item">
+              <div class="setting-info">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                <div>
+                  <span class="setting-label">Email Preferences</span>
+                  <span class="setting-description">Manage notification emails</span>
+                </div>
+              </div>
+              <button type="button" class="btn btn-secondary btn-sm" id="email-prefs-btn">Manage</button>
+            </div>
+          </div>
+        </div>
+        <div class="settings-card">
+          <h3>Preferences</h3>
+          <div class="settings-group">
+            <div class="setting-item">
+              <div class="setting-info">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                <div>
+                  <span class="setting-label">Dark Mode</span>
+                  <span class="setting-description">Toggle dark/light theme</span>
+                </div>
+              </div>
+              <button type="button" class="btn btn-secondary btn-sm" id="theme-toggle-btn">Toggle</button>
+            </div>
+          </div>
+        </div>
+        <div class="settings-card settings-danger-zone">
+          <h3>Danger Zone</h3>
+          <div class="settings-group">
+            <div class="setting-item">
+              <div class="setting-info">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                <div>
+                  <span class="setting-label">Delete Account</span>
+                  <span class="setting-description">Permanently delete your account and all data</span>
+                </div>
+              </div>
+              <button type="button" class="btn btn-danger btn-sm" id="delete-account-btn">Delete Account</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Rate & Review Modal -->
+  <div id="rate-review-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="rate-review-modal-title" style="display:none;">
+    <div class="modal-backdrop" tabindex="-1"></div>
+    <div class="modal-content rate-review-modal-content" style="max-width: 480px;">
+      <button class="modal-close" aria-label="Close rate & review">&times;</button>
+      <h2 id="rate-review-modal-title">Rate & Review</h2>
+      <div class="rate-review-product-info" style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border);">
+        <img id="rate-review-product-image" src="" alt="" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; background: var(--bg); display: none;">
+        <p class="rate-review-product-name" id="rate-review-product-name" style="margin: 0; max-width: calc(100% - 80px);"></p>
+      </div>
+      <form id="rate-review-form" novalidate>
+        <div class="form-group">
+          <label class="rate-review-label">Rate this product</label>
+          <div class="rate-review-stars" id="rate-review-stars" role="radiogroup" aria-label="Select rating">
+            <button type="button" class="rate-review-star" data-value="1" aria-label="1 star">☆</button>
+            <button type="button" class="rate-review-star" data-value="2" aria-label="2 stars">☆</button>
+            <button type="button" class="rate-review-star" data-value="3" aria-label="3 stars">☆</button>
+            <button type="button" class="rate-review-star" data-value="4" aria-label="4 stars">☆</button>
+            <button type="button" class="rate-review-star" data-value="5" aria-label="5 stars">☆</button>
+          </div>
+          <p id="rate-review-rating-error" class="error" style="display:none;"></p>
+        </div>
+        <div class="form-group">
+          <label for="rate-review-comment" class="rate-review-label">Write your review</label>
+          <textarea id="rate-review-comment" name="comment" rows="4" required placeholder="Share your experience with this product..." autocomplete="off"></textarea>
+          <p id="rate-review-comment-error" class="error" style="display:none;"></p>
+        </div>
+        <p id="rate-review-error" class="error" style="display:none;"></p>
+        <p id="rate-review-success" class="success" style="display:none;"></p>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="rate-review-cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="rate-review-submit">
+            <span class="btn-text">Submit Review</span>
+            <span class="btn-loading" style="display:none;"><span class="spinner-sm"></span> Submitting...</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer" role="contentinfo">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="#" class="logo">
+            <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 6H3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2z"/><path d="M3.5 12h17"/><path d="M12 8v8"/></svg>
+            <span class="logo-text">ShopEase</span>
+          </a>
+          <p>Premium quality products delivered to your door. Shop with confidence.</p>
+        </div>
+        <nav class="footer-links" aria-label="Footer navigation">
+          <div class="footer-column">
+            <h4>Support</h4>
+            <a href="#">Help Center</a>
+            <a href="#">Shipping Info</a>
+            <a href="#">Returns</a>
+            <a href="#">Contact Us</a>
+          </div>
+          <div class="footer-column">
+            <h4>Company</h4>
+            <a href="#">About Us</a>
+            <a href="#">Careers</a>
+            <a href="#">Press</a>
+            <a href="#">Blog</a>
+          </div>
+          <div class="footer-column">
+            <h4>Legal</h4>
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms of Service</a>
+            <a href="#">Cookie Policy</a>
+          </div>
+        </nav>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2024 ShopEase. All rights reserved.</p>
+        <div class="social-links">
+          <a href="#" aria-label="Twitter"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"/></svg></a>
+          <a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
+          <a href="#" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>

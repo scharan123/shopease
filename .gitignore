@@ -1,0 +1,29 @@
+# ============================================================
+# ShopEase — .gitignore
+# ============================================================
+
+# Dependencies
+node_modules/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+!.env.docker
+
+# Build output
+dist/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Docker volumes
+db_data/
