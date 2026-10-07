@@ -233,10 +233,11 @@ app.get('/api', (req, res) => {
   });
 });
 
-// Frontend SPA fallback
+// Frontend is hosted separately (Vercel). Return 404 for unknown routes.
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/index.html'));
+  res.status(404).json({ error: 'Route not found. This is an API server.' });
 });
+
 
 // Global error handler
 app.use((err, req, res, next) => {
