@@ -1,7 +1,10 @@
-// Backend URL: use env-injected value, same-origin /api, or production fallback
-const API = (window.location.protocol === 'http:' && window.location.port === '5000')
-  ? '/api'
-  : (window._API_URL || 'https://backend-server-ka2a.onrender.com/api');
+// Backend URL: use env-injected value, same-origin /api, local backend, or production fallback
+let API = window._API_URL || 'https://backend-server-ka2a.onrender.com/api';
+if (window.location.protocol === 'http:' && window.location.port === '5000') {
+  API = '/api';
+} else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+  API = 'http://localhost:5000/api';
+}
 
 
 // Local, network-free image fallback (used when a product image URL fails to load).
