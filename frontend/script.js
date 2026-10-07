@@ -1,11 +1,8 @@
-// Backend always runs on :5000. The frontend can be opened:
-//   - directly as a file://  -> use absolute backend URL (cross-origin allowed by CORS)
-//   - via Live Server :3000 / :5500 -> use absolute backend URL
-//   - via the backend itself :5000 -> same-origin '/api'
-// Always target the backend on :5000 so it works no matter how the page is opened.
+// Backend URL: use env-injected value, same-origin /api, or production fallback
 const API = (window.location.protocol === 'http:' && window.location.port === '5000')
   ? '/api'
-  : 'http://localhost:5000/api';
+  : (window._API_URL || 'https://backend-server-ka2a.onrender.com/api');
+
 
 // Local, network-free image fallback (used when a product image URL fails to load).
 function imgFallback(el) {
