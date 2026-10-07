@@ -917,9 +917,16 @@ function handleReferralFromUrl() {
       hiddenInput.value = refCode.toUpperCase();
       registerForm.appendChild(hiddenInput);
       
+      // Navigate to auth view and register tab
+      if (typeof handleNav === 'function') handleNav('auth');
+      if (typeof switchAuthTab === 'function') switchAuthTab('register');
+      
       // Show notification
       const referrerName = urlParams.get('referrer_name') || 'someone';
       toast(`You were referred by ${referrerName}! The referral code has been applied.`, 'success');
+      
+      // Clean up URL so it doesn't stay in the address bar
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
   }
 }

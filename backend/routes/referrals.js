@@ -46,7 +46,7 @@ router.get('/my-code', authenticateToken, async (req, res) => {
       codes = [{ code }];
     }
 
-    const referralLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/register?ref=${codes[0].code}`;
+    const referralLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/?ref=${codes[0].code}#auth`;
 
     res.json({
       referral_code: codes[0].code,
