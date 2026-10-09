@@ -49,7 +49,7 @@ const state = {
 };
 
 const $ = (id) => document.getElementById(id);
-const navLinks = ['home', 'cart', 'wishlist', 'orders', 'referrals', 'support', 'logout', 'auth'];
+const navLinks = ['home', 'cart', 'wishlist', 'orders', 'referrals', 'support', 'auth'];
 const sections = ['auth', 'forgot', 'otp', 'reset', 'home', 'cart', 'wishlist', 'checkout', 'orders', 'product-detail', 'support', 'referrals', 'profile', 'settings'];
 
 const HERO_IMAGES = [
@@ -1037,6 +1037,239 @@ function bindEvents() {
     else if (el) { el.textContent = ''; el.style.display = 'none'; }
   });
 
+  // Settings page buttons
+  const changePwdBtn = $('change-password-btn');
+  const emailPrefsBtn = $('email-prefs-btn');
+  const themeToggleBtn = $('theme-toggle-btn');
+  const settingsLangBtn = $('settings-language-btn');
+  
+  if (changePwdBtn) {
+    changePwdBtn.addEventListener('click', () => {
+      const modal = document.getElementById('password-modal');
+      const backdrop = document.getElementById('password-modal-backdrop');
+      if (modal && backdrop) {
+        modal.style.display = 'flex';
+        backdrop.style.display = 'block';
+      }
+    });
+  }
+
+  const closePwdModal = () => {
+    const modal = document.getElementById('password-modal');
+    const backdrop = document.getElementById('password-modal-backdrop');
+    if (modal) modal.style.display = 'none';
+    if (backdrop) backdrop.style.display = 'none';
+    const form = document.getElementById('change-password-form');
+    if (form) form.reset();
+    const errorEl = document.getElementById('password-error');
+    if (errorEl) errorEl.style.display = 'none';
+    const strengthEl = document.getElementById('new-password-strength');
+    if (strengthEl) strengthEl.textContent = '';
+  };
+  
+  if ($('password-modal-close')) $('password-modal-close').addEventListener('click', closePwdModal);
+  if ($('password-modal-cancel')) $('password-modal-cancel').addEventListener('click', closePwdModal);
+  if ($('password-modal-backdrop')) $('password-modal-backdrop').addEventListener('click', closePwdModal);
+
+  document.querySelectorAll('.password-toggle').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const targetId = e.target.getAttribute('data-target');
+      const input = document.getElementById(targetId);
+      if (input.type === 'password') {
+        input.type = 'text';
+        e.target.textContent = 'Hide';
+      } else {
+        input.type = 'password';
+        e.target.textContent = 'Show';
+      }
+    });
+  });
+
+  const newPwdInput = $('new-password');
+  if (newPwdInput) {
+    newPwdInput.addEventListener('input', (e) => {
+      const val = e.target.value;
+      const strengthEl = $('new-password-strength');
+      if (!val) { strengthEl.textContent = ''; return; }
+      let strength = 'Weak';
+      let color = 'red';
+      if (val.length > 8 && /[A-Z]/.test(val) && /[0-9]/.test(val)) { strength = 'Strong'; color = 'green'; }
+      else if (val.length >= 6) { strength = 'Medium'; color = 'orange'; }
+      strengthEl.textContent = 'Strength: ' + strength;
+      strengthEl.style.color = color;
+    });
+  }
+
+  const pwdForm = $('change-password-form');
+  if (pwdForm) {
+    pwdForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const current = $('current-password').value;
+      const newPwd = $('new-password').value;
+      const confirmPwd = $('confirm-new-password').value;
+      const errorEl = $('password-error');
+      
+      if (newPwd !== confirmPwd) {
+        errorEl.textContent = 'New passwords do not match';
+        errorEl.style.display = 'block';
+        return;
+      }
+      
+      if (newPwd.length < 6) {
+        errorEl.textContent = 'New password must be at least 6 characters';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      errorEl.style.display = 'none';
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) throw new Error('Not logged in');
+        
+        const res = await fetch('/api/auth/change-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ current_password: current, new_password: newPwd })
+        });
+        
+        const data = await res.json().catch(()=>({}));
+        if (res.ok) {
+          toast('Password updated successfully', 'success');
+          closePwdModal();
+        } else {
+          if (res.status === 404) {
+            toast('Backend update-password functionality is required. Route not found.', 'error');
+          } else {
+            errorEl.textContent = data.error || 'Failed to update password';
+            errorEl.style.display = 'block';
+          }
+        }
+      } catch (err) {
+        errorEl.textContent = err.message || 'Error communicating with server';
+        errorEl.style.display = 'block';
+      }
+    });
+  }
+
+  if (emailPrefsBtn) {
+    emailPrefsBtn.addEventListener('click', () => {
+      const modal = document.getElementById('email-modal');
+      const backdrop = document.getElementById('email-modal-backdrop');
+      if (modal && backdrop) {
+        modal.style.display = 'flex';
+        backdrop.style.display = 'block';
+        
+        const emailInput = document.getElementById('current-email');
+        if (emailInput) {
+           const userData = JSON.parse(localStorage.getItem('user') || '{}');
+           emailInput.value = userData.email || '';
+        }
+        
+        ['orders', 'promos', 'account'].forEach(pref => {
+          const cb = document.getElementById('notif-' + pref);
+          if (cb) {
+            const val = localStorage.getItem('notif-' + pref);
+            if (val !== null) cb.checked = val === 'true';
+          }
+        });
+      }
+    });
+  }
+
+  const closeEmailModal = () => {
+    const modal = document.getElementById('email-modal');
+    const backdrop = document.getElementById('email-modal-backdrop');
+    if (modal) modal.style.display = 'none';
+    if (backdrop) backdrop.style.display = 'none';
+    const form = document.getElementById('email-preferences-form');
+    if (form) form.reset();
+    const errorEl = document.getElementById('email-error');
+    if (errorEl) errorEl.style.display = 'none';
+  };
+
+  if ($('email-modal-close')) $('email-modal-close').addEventListener('click', closeEmailModal);
+  if ($('email-modal-cancel')) $('email-modal-cancel').addEventListener('click', closeEmailModal);
+  if ($('email-modal-backdrop')) $('email-modal-backdrop').addEventListener('click', closeEmailModal);
+
+  const emailForm = $('email-preferences-form');
+  if (emailForm) {
+    emailForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const current = $('current-email').value;
+      const confirm = $('confirm-email').value;
+      const errorEl = $('email-error');
+      
+      if (current !== confirm && confirm) {
+        errorEl.textContent = 'Emails do not match';
+        errorEl.style.display = 'block';
+        return;
+      }
+      
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(current)) {
+        errorEl.textContent = 'Invalid email format';
+        errorEl.style.display = 'block';
+        return;
+      }
+      
+      errorEl.style.display = 'none';
+      
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) throw new Error('Not logged in');
+        
+        const res = await fetch('/api/auth/update-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ new_email: current })
+        });
+        
+        const data = await res.json().catch(()=>({}));
+        if (res.ok || res.status === 404) {
+          if (res.status === 404) {
+            toast('Backend email update flow is required. Settings saved locally.', 'warning');
+          } else {
+            toast('Email updated. Please check your inbox to verify.', 'success');
+            let user = JSON.parse(localStorage.getItem('user') || '{}');
+            user.email = current;
+            localStorage.setItem('user', JSON.stringify(user));
+          }
+          
+          ['orders', 'promos', 'account'].forEach(pref => {
+            const cb = document.getElementById('notif-' + pref);
+            if (cb) localStorage.setItem('notif-' + pref, cb.checked);
+          });
+          
+          closeEmailModal();
+        } else {
+          errorEl.textContent = data.error || 'Failed to update email';
+          errorEl.style.display = 'block';
+        }
+      } catch (err) {
+        errorEl.textContent = err.message || 'Error communicating with server';
+        errorEl.style.display = 'block';
+      }
+    });
+  }
+  if (themeToggleBtn) {
+    themeToggleBtn.addEventListener('click', () => {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+      localStorage.setItem('theme', isDark ? 'light' : 'dark');
+      updateThemeButtonLabel(!isDark);
+    });
+  }
+  if (settingsLangBtn) {
+    settingsLangBtn.addEventListener('click', () => {
+      const modal = document.getElementById('language-modal');
+      const backdrop = document.getElementById('language-modal-backdrop');
+      if (modal && backdrop) {
+        modal.style.display = 'flex';
+        backdrop.style.display = 'block';
+      }
+    });
+  }
+
   $('search-input').addEventListener('input', debounce(onSearch, 300));
   $('search-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') { hideSuggestions(); $('search-input').blur(); } });
   $('search-input').addEventListener('focus', () => { if (state.searchQuery.length >= 2) showSuggestions(0); });
@@ -1840,54 +2073,86 @@ function stopCarousel() { if (state.carouselTimer) clearInterval(state.carouselT
 
 async function loadProducts() {
   const grid = $('products-grid'), loading = $('products-loading'), empty = $('no-products');
-  loading.style.display = 'block'; grid.innerHTML = ''; empty.style.display = 'none';
+  let errorEl = $('products-error');
+  if (!errorEl) {
+    errorEl = document.createElement('div');
+    errorEl.id = 'products-error';
+    errorEl.className = 'empty-state';
+    errorEl.style.display = 'none';
+    errorEl.innerHTML = `
+      <p id="products-error-msg" style="margin-bottom: var(--space-3); color: var(--error);">Failed to load products. Please try again.</p>
+      <button class="btn btn-primary" onclick="loadProducts()">Retry</button>
+    `;
+    grid.parentNode.insertBefore(errorEl, grid.nextSibling);
+  }
+
+  loading.style.display = 'block'; 
+  grid.innerHTML = ''; 
+  empty.style.display = 'none';
+  errorEl.style.display = 'none';
+  if ($('product-count')) $('product-count').textContent = '';
+
   try {
     const params = new URLSearchParams({ limit: 200 });
     if (state.currentCategory !== 'all') params.set('category', state.currentCategory);
     if (state.searchQuery) params.set('search', state.searchQuery);
+    
     const data = await apiGet(`/products?${params}`);
-    state.products = data.products;
+    
+    // Support both {products, pagination} format and direct array format
+    const productsList = Array.isArray(data) ? data : (data.products || []);
+    state.products = productsList;
+    
     loading.style.display = 'none';
-    $('product-count').textContent = `${data.pagination.total} products`;
-    if (data.products.length === 0) {
+    
+    const totalCount = data.pagination?.total || productsList.length;
+    if ($('product-count')) $('product-count').textContent = `${totalCount} products`;
+    
+    if (productsList.length === 0) {
       empty.style.display = 'block';
-      empty.textContent = 'No products found matching your criteria.';
+      if (state.currentCategory === 'all' && !state.searchQuery) {
+        empty.textContent = 'No products available yet.';
+      } else {
+        empty.textContent = 'No products found matching your criteria.';
+      }
       return;
     }
-grid.innerHTML = data.products.map((p, i) => `
-      <article class="product-card" style="animation-delay:${i * 0.05}s" data-id="${p.id}">
+
+    grid.innerHTML = productsList.map((p, i) => `
+      <article class="product-card" style="animation-delay:${i * 0.05}s" data-id="${p.id || ''}">
         <div class="product-image-wrap">
           ${p.featured ? '<span class="product-badge">Featured</span>' : ''}
-          <img class="product-image" src="${p.image_url}" alt="${p.name}" loading="lazy" onerror="imgFallback(this)">
-          <button class="product-fav${isWishlisted(p.id) ? ' active' : ''}" data-id="${p.id}" aria-label="Save to wishlist">♥</button>
-          <button class="product-share" data-id="${p.id}" aria-label="Share product">
+          <img class="product-image" src="${p.image_url || ''}" alt="${escapeHtml(p.name || 'Product')}" loading="lazy" onerror="imgFallback(this)">
+          <button class="product-fav${isWishlisted(p.id) ? ' active' : ''}" data-id="${p.id || ''}" aria-label="Save to wishlist">♥</button>
+          <button class="product-share" data-id="${p.id || ''}" aria-label="Share product">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
           </button>
         </div>
         <div class="product-info">
-          <span class="product-cat">${p.category}</span>
-          <h3 class="product-name">${p.name}</h3>
+          <span class="product-cat">${p.category || 'General'}</span>
+          <h3 class="product-name">${escapeHtml(p.name || 'Unnamed Product')}</h3>
           <div class="product-rating">
             ${productRatingHTML(p)}
           </div>
-          <p class="product-desc">${p.description || `${p.name} is selected for dependable quality and everyday value.`}</p>
+          <p class="product-desc">${escapeHtml(p.description) || `${escapeHtml(p.name || 'Product')} is selected for dependable quality and everyday value.`}</p>
           <div class="product-bottom">
             <div class="price-block">
-              ${p.discount > 0 ? `<s class="product-price-old">₹${parseFloat(p.price).toFixed(2)}</s> ` : ''}
+              ${p.discount > 0 ? `<s class="product-price-old">₹${parseFloat(p.price || 0).toFixed(2)}</s> ` : ''}
               <span class="product-price">₹${discounted(p).toFixed(2)}</span>
             </div>
-            <div class="product-add-controls" data-id="${p.id}" data-label="Add" data-stock="${p.stock}">
-              <button class="btn btn-primary btn-sm add-to-cart" data-id="${p.id}" data-label="Add" ${p.stock === 0 ? 'disabled' : ''}>Add</button>
+            <div class="product-add-controls" data-id="${p.id || ''}" data-label="Add" data-stock="${p.stock || 0}">
+              <button class="btn btn-primary btn-sm add-to-cart" data-id="${p.id || ''}" data-label="Add" ${(p.stock || 0) === 0 ? 'disabled' : ''}>Add</button>
               <div class="qty-control product-qty" style="display:none;">
-                <button class="qty-btn stock-dec" data-id="${p.id}" aria-label="Decrease quantity">−</button>
+                <button class="qty-btn stock-dec" data-id="${p.id || ''}" aria-label="Decrease quantity">−</button>
                 <span class="qty-value stock-qty">0</span>
-                <button class="qty-btn stock-inc" data-id="${p.id}" aria-label="Increase quantity">+</button>
+                <button class="qty-btn stock-inc" data-id="${p.id || ''}" aria-label="Increase quantity">+</button>
               </div>
             </div>
           </div>
-          <div class="product-delivery" data-id="${p.id}" aria-live="polite"></div>
+          <div class="product-delivery" data-id="${p.id || ''}" aria-live="polite"></div>
         </div>
       </article>`).join('');
+      
     grid.querySelectorAll('.add-to-cart').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); addToCart(parseInt(b.dataset.id)); }));
     grid.querySelectorAll('.stock-inc').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); updateQty(parseInt(b.dataset.id), 1); }));
     grid.querySelectorAll('.stock-dec').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); updateQty(parseInt(b.dataset.id), -1); }));
@@ -1897,7 +2162,15 @@ grid.innerHTML = data.products.map((p, i) => `
     markCartButtons();
     if (state.selectedPin) await loadDeliveryAvailability(state.selectedPin);
     renderDeliveryStatuses();
-  } catch (e) { loading.style.display = 'none'; console.error(e); }
+  } catch (e) { 
+    loading.style.display = 'none'; 
+    console.error('Failed to load products:', e);
+    if (errorEl) {
+      const msgEl = errorEl.querySelector('#products-error-msg');
+      if (msgEl) msgEl.textContent = e.message || 'Failed to load products. Please try again.';
+      errorEl.style.display = 'block';
+    }
+  }
 }
 
 function onSearch(e) {
@@ -5042,4 +5315,80 @@ function toast(msg, type = 'info') {
 }
 function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
 
-document.addEventListener('DOMContentLoaded', init);
+const initSettingsOtherButtons = () => {
+  const deleteAccBtn = document.getElementById('delete-account-btn');
+  const deleteModal = document.getElementById('delete-account-modal');
+  const deleteBackdrop = document.getElementById('delete-account-modal-backdrop');
+  const deleteCancel = document.getElementById('delete-account-cancel');
+  const deleteClose = document.getElementById('delete-account-modal-close');
+  const deleteConfirm = document.getElementById('delete-account-confirm');
+  const deleteError = document.getElementById('delete-account-error');
+
+  const closeDeleteModal = () => {
+    if (deleteModal) deleteModal.style.display = 'none';
+    if (deleteBackdrop) deleteBackdrop.style.display = 'none';
+    if (deleteError) {
+      deleteError.style.display = 'none';
+      deleteError.textContent = '';
+    }
+  };
+
+  if (deleteAccBtn) {
+    deleteAccBtn.addEventListener('click', () => {
+      if (deleteModal && deleteBackdrop) {
+        deleteModal.style.display = 'flex';
+        deleteBackdrop.style.display = 'block';
+      }
+    });
+  }
+
+  if (deleteCancel) deleteCancel.addEventListener('click', closeDeleteModal);
+  if (deleteClose) deleteClose.addEventListener('click', closeDeleteModal);
+  if (deleteBackdrop) deleteBackdrop.addEventListener('click', closeDeleteModal);
+
+  if (deleteConfirm) {
+    deleteConfirm.addEventListener('click', async () => {
+      deleteConfirm.disabled = true;
+      const originalText = deleteConfirm.textContent;
+      deleteConfirm.textContent = 'Deleting...';
+      if (deleteError) deleteError.style.display = 'none';
+
+      try {
+        await apiDelete('/auth/me');
+        closeDeleteModal();
+        toast('Your account has been deleted successfully.', 'success');
+        logout();
+      } catch (err) {
+        if (deleteError) {
+          deleteError.textContent = err.message || 'Failed to delete account. Please try again.';
+          deleteError.style.display = 'block';
+        } else {
+          toast(err.message || 'Failed to delete account', 'error');
+        }
+      } finally {
+        deleteConfirm.disabled = false;
+        deleteConfirm.textContent = originalText;
+      }
+    });
+  }
+};
+
+document.addEventListener('DOMContentLoaded', initSettingsOtherButtons);
+
+function updateThemeButtonLabel(isDark) {
+  const btn = document.getElementById('theme-toggle-btn');
+  if (btn) btn.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+}
+
+function initTheme() {
+  const savedTheme = localStorage.getItem('theme');
+  if (savedTheme === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+  updateThemeButtonLabel(savedTheme === 'dark');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  initTheme();
+  init();
+});
