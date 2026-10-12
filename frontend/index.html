@@ -9,6 +9,18 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <script>
+    (function() {
+      try {
+        var saved = localStorage.getItem('theme');
+        if (saved === 'dark') {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        } else {
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
+      } catch (e) {}
+    })();
+  </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
 </head>
@@ -52,6 +64,18 @@
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 10h8"/><path d="M8 14h5"/></svg>
           <span>Support</span>
         </a>
+
+        <!-- Dark Mode / Light Mode Toggle -->
+        <div class="header-theme-toggle-group" id="header-theme-toggle" role="group" aria-label="Theme toggle" title="Toggle theme">
+          <button type="button" class="theme-toggle-btn-opt active" id="header-theme-btn-light" data-theme-val="light" aria-label="Light Mode" title="Light Mode">
+            <span class="theme-icon">☀️</span>
+            <span class="theme-opt-label">Light</span>
+          </button>
+          <button type="button" class="theme-toggle-btn-opt" id="header-theme-btn-dark" data-theme-val="dark" aria-label="Dark Mode" title="Dark Mode">
+            <span class="theme-icon">🌙</span>
+            <span class="theme-opt-label">Dark</span>
+          </button>
+        </div>
 
         <!-- Profile Dropdown (shown when logged in) -->
         <div class="profile-wrapper" id="profile-wrapper" style="display:none;">
@@ -120,6 +144,24 @@
       <a href="#" class="mobile-nav-link" data-view="orders" style="display:none;"><span>Orders</span></a>
       <a href="#" class="mobile-nav-link" data-view="referrals" style="display:none;"><span>Refer & Earn</span></a>
       <a href="#" class="mobile-nav-link" data-view="support"><span>Support</span></a>
+
+      <!-- Mobile Dark Mode / Light Mode Toggle -->
+      <div class="mobile-theme-toggle-item">
+        <span class="mobile-theme-toggle-label">
+          <span id="mobile-theme-icon">☀️</span>
+          <span id="mobile-theme-text">Theme</span>
+        </span>
+        <div class="header-theme-toggle-group" id="mobile-theme-toggle" role="group" aria-label="Theme toggle">
+          <button type="button" class="theme-toggle-btn-opt active" id="mobile-theme-btn-light" data-theme-val="light" aria-label="Light Mode">
+            <span class="theme-icon">☀️</span>
+            <span class="theme-opt-label">Light</span>
+          </button>
+          <button type="button" class="theme-toggle-btn-opt" id="mobile-theme-btn-dark" data-theme-val="dark" aria-label="Dark Mode">
+            <span class="theme-icon">🌙</span>
+            <span class="theme-opt-label">Dark</span>
+          </button>
+        </div>
+      </div>
 
       <!-- Mobile Profile Dropdown (shown when logged in) -->
       <div class="profile-wrapper" id="mobile-profile-wrapper" style="display:none;">
