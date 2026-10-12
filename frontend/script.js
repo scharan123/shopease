@@ -2018,16 +2018,30 @@ async function loadCategories() {
   try {
     const cats = await apiGet('/categories');
     state.categories = cats;
-    const wrap = $('categories-scroll');
-    wrap.querySelectorAll('.category-pill:not(.active)').forEach(p => p.remove());
-    cats.forEach(c => {
-      const btn = document.createElement('button');
-      btn.className = 'category-pill'; btn.dataset.category = c.slug;
-      btn.innerHTML = `<span class="cat-icon">${getCategoryIcon(c.slug)}</span>${c.name}`;
-      btn.addEventListener('click', () => selectCategory(c.slug));
-      wrap.appendChild(btn);
-    });
+    renderCategoryPills();
   } catch (e) { console.error(e); }
+}
+
+function renderCategoryPills() {
+  const wrap = $('categories-scroll');
+  if (!wrap) return;
+  const current = state.currentCategory || 'all';
+  wrap.innerHTML = `
+    <button class="category-pill ${current === 'all' ? 'active' : ''}" data-category="all">
+      <span class="cat-icon">🏷️</span>${typeof getCategoryName === 'function' ? getCategoryName('all') : 'All Products'}
+    </button>
+  `;
+  (state.categories || []).forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = `category-pill ${current === c.slug ? 'active' : ''}`;
+    btn.dataset.category = c.slug;
+    const catName = typeof getCategoryName === 'function' ? getCategoryName(c.slug) : c.name;
+    btn.innerHTML = `<span class="cat-icon">${getCategoryIcon(c.slug)}</span>${catName}`;
+    btn.addEventListener('click', () => selectCategory(c.slug));
+    wrap.appendChild(btn);
+  });
+  const allBtn = wrap.querySelector('[data-category="all"]');
+  if (allBtn) allBtn.addEventListener('click', () => selectCategory('all'));
 }
 
 function selectCategory(slug) {
@@ -2043,16 +2057,21 @@ async function loadFeatured() {
     state.carouselSlides = slides;
     const track = $('carousel-track'), dots = $('carousel-dots');
     if (slides.length === 0) { $('hero-carousel').style.display = 'none'; return; }
-    track.innerHTML = slides.map((s, i) => `
+    track.innerHTML = slides.map((s, i) => {
+      const ts = typeof getTranslatedProduct === 'function' ? getTranslatedProduct(s) : s;
+      const featLabel = typeof t === 'function' ? t('Featured') : 'Featured';
+      const shopLabel = typeof t === 'function' ? t('Shop Now') : 'Shop Now';
+      return `
       <div class="carousel-slide">
         <div class="carousel-slide-bg" style="background-image:url('${HERO_IMAGES[i % HERO_IMAGES.length]}')"></div>
         <div class="carousel-content">
-          <span class="carousel-badge">Featured</span>
-          <h2>${s.name}</h2>
-          <p>${s.description ? s.description.slice(0, 100) : ''}</p>
-          <button class="btn btn-primary" onclick="addToCart(${s.id})">Shop Now • ₹${parseFloat(s.price).toFixed(2)}</button>
+          <span class="carousel-badge">${featLabel}</span>
+          <h2>${ts.name}</h2>
+          <p>${ts.description ? ts.description.slice(0, 100) : ''}</p>
+          <button class="btn btn-primary" onclick="addToCart(${s.id})">${shopLabel} • ₹${parseFloat(s.price).toFixed(2)}</button>
         </div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
     dots.innerHTML = slides.map((_, i) => `<button class="carousel-dot ${i === 0 ? 'active' : ''}" data-i="${i}" aria-label="Go to slide ${i + 1}"></button>`).join('');
     dots.querySelectorAll('.carousel-dot').forEach(d => d.addEventListener('click', () => goSlide(parseInt(d.dataset.i))));
     startCarousel();
@@ -2103,52 +2122,63 @@ async function loadProducts() {
     loading.style.display = 'none';
     
     const totalCount = data.pagination?.total || productsList.length;
-    if ($('product-count')) $('product-count').textContent = `${totalCount} products`;
+    if ($('product-count')) $('product-count').textContent = `${totalCount} ${typeof t === 'function' ? t('products') : 'products'}`;
     
     if (productsList.length === 0) {
       empty.style.display = 'block';
       if (state.currentCategory === 'all' && !state.searchQuery) {
-        empty.textContent = 'No products available yet.';
+        empty.textContent = typeof t === 'function' ? t('No products available yet.') : 'No products available yet.';
       } else {
-        empty.textContent = 'No products found matching your criteria.';
+        empty.textContent = typeof t === 'function' ? t('No products found matching your criteria.') : 'No products found matching your criteria.';
       }
       return;
     }
 
-    grid.innerHTML = productsList.map((p, i) => `
+    grid.innerHTML = productsList.map((p, i) => {
+      const tp = typeof getTranslatedProduct === 'function' ? getTranslatedProduct(p) : p;
+      const isOut = (p.stock || 0) === 0;
+      const addText = isOut ? (typeof t === 'function' ? t('Out of Stock') : 'Out of Stock') : (typeof t === 'function' ? t('Add') : 'Add');
+      const featBadge = typeof t === 'function' ? t('Featured') : 'Featured';
+      const wishLabel = typeof t === 'function' ? t('Save to wishlist') : 'Save to wishlist';
+      const shareLabel = typeof t === 'function' ? t('Share product') : 'Share product';
+      const decLabel = typeof t === 'function' ? t('Decrease quantity') : 'Decrease quantity';
+      const incLabel = typeof t === 'function' ? t('Increase quantity') : 'Increase quantity';
+
+      return `
       <article class="product-card" style="animation-delay:${i * 0.05}s" data-id="${p.id || ''}">
         <div class="product-image-wrap">
-          ${p.featured ? '<span class="product-badge">Featured</span>' : ''}
-          <img class="product-image" src="${p.image_url || ''}" alt="${escapeHtml(p.name || 'Product')}" loading="lazy" onerror="imgFallback(this)">
-          <button class="product-fav${isWishlisted(p.id) ? ' active' : ''}" data-id="${p.id || ''}" aria-label="Save to wishlist">♥</button>
-          <button class="product-share" data-id="${p.id || ''}" aria-label="Share product">
+          ${p.featured ? `<span class="product-badge">${featBadge}</span>` : ''}
+          <img class="product-image" src="${p.image_url || ''}" alt="${escapeHtml(tp.name || 'Product')}" loading="lazy" onerror="imgFallback(this)">
+          <button class="product-fav${isWishlisted(p.id) ? ' active' : ''}" data-id="${p.id || ''}" aria-label="${wishLabel}">♥</button>
+          <button class="product-share" data-id="${p.id || ''}" aria-label="${shareLabel}">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
           </button>
         </div>
         <div class="product-info">
-          <span class="product-cat">${p.category || 'General'}</span>
-          <h3 class="product-name">${escapeHtml(p.name || 'Unnamed Product')}</h3>
+          <span class="product-cat">${escapeHtml(tp.categoryName || tp.category || 'General')}</span>
+          <h3 class="product-name">${escapeHtml(tp.name || 'Unnamed Product')}</h3>
           <div class="product-rating">
             ${productRatingHTML(p)}
           </div>
-          <p class="product-desc">${escapeHtml(p.description) || `${escapeHtml(p.name || 'Product')} is selected for dependable quality and everyday value.`}</p>
+          <p class="product-desc">${escapeHtml(tp.description) || `${escapeHtml(tp.name || 'Product')} is selected for dependable quality and everyday value.`}</p>
           <div class="product-bottom">
             <div class="price-block">
               ${p.discount > 0 ? `<s class="product-price-old">₹${parseFloat(p.price || 0).toFixed(2)}</s> ` : ''}
               <span class="product-price">₹${discounted(p).toFixed(2)}</span>
             </div>
             <div class="product-add-controls" data-id="${p.id || ''}" data-label="Add" data-stock="${p.stock || 0}">
-              <button class="btn btn-primary btn-sm add-to-cart" data-id="${p.id || ''}" data-label="Add" ${(p.stock || 0) === 0 ? 'disabled' : ''}>Add</button>
+              <button class="btn btn-primary btn-sm add-to-cart" data-id="${p.id || ''}" data-label="Add" ${isOut ? 'disabled' : ''}>${addText}</button>
               <div class="qty-control product-qty" style="display:none;">
-                <button class="qty-btn stock-dec" data-id="${p.id || ''}" aria-label="Decrease quantity">−</button>
+                <button class="qty-btn stock-dec" data-id="${p.id || ''}" aria-label="${decLabel}">−</button>
                 <span class="qty-value stock-qty">0</span>
-                <button class="qty-btn stock-inc" data-id="${p.id || ''}" aria-label="Increase quantity">+</button>
+                <button class="qty-btn stock-inc" data-id="${p.id || ''}" aria-label="${incLabel}">+</button>
               </div>
             </div>
           </div>
           <div class="product-delivery" data-id="${p.id || ''}" aria-live="polite"></div>
         </div>
-      </article>`).join('');
+      </article>`;
+    }).join('');
       
     grid.querySelectorAll('.add-to-cart').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); addToCart(parseInt(b.dataset.id)); }));
     grid.querySelectorAll('.stock-inc').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); updateQty(parseInt(b.dataset.id), 1); }));
@@ -2179,16 +2209,25 @@ function onSearch(e) {
 function showSuggestions() {
   const box = $('search-suggestions');
   const q = state.searchQuery.toLowerCase();
-  const matches = state.products.filter(p => p.name.toLowerCase().includes(q)).slice(0, 6);
+  const matches = state.products.filter(p => {
+    const tp = typeof getTranslatedProduct === 'function' ? getTranslatedProduct(p) : p;
+    return (p.name && p.name.toLowerCase().includes(q)) ||
+           (tp.name && tp.name.toLowerCase().includes(q)) ||
+           (p.category && p.category.toLowerCase().includes(q)) ||
+           (tp.categoryName && tp.categoryName.toLowerCase().includes(q));
+  }).slice(0, 6);
   if (matches.length === 0) { box.style.display = 'none'; return; }
-  box.innerHTML = matches.map(p => `
+  box.innerHTML = matches.map(p => {
+    const tp = typeof getTranslatedProduct === 'function' ? getTranslatedProduct(p) : p;
+    return `
     <div class="suggestion-item" data-id="${p.id}">
       <img class="suggestion-img" src="${p.image_url}" alt="" onerror="this.style.display='none'">
       <div class="suggestion-info">
-        <div class="suggestion-name">${p.name}</div>
-        <div class="suggestion-cat">${p.category} • ₹${parseFloat(p.price).toFixed(2)}</div>
+        <div class="suggestion-name">${tp.name}</div>
+        <div class="suggestion-cat">${tp.categoryName || tp.category} • ₹${parseFloat(p.price).toFixed(2)}</div>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   box.style.display = 'block';
   box.querySelectorAll('.suggestion-item').forEach(it => it.addEventListener('click', () => { openProduct(parseInt(it.dataset.id)); hideSuggestions(); }));
 }
@@ -2212,25 +2251,25 @@ async function renderProductDetail(id) {
   if (!p) { showView('home'); return; }
   state.currentProductId = id;
 
-  const description = p.description || `${p.name} is a carefully selected ${p.category || 'everyday'} product made for reliable performance and lasting value.`;
+  const tp = typeof getTranslatedProduct === 'function' ? getTranslatedProduct(p) : p;
+  const description = tp.description || `${tp.name} is a carefully selected ${tp.categoryName || 'everyday'} product made for reliable performance and lasting value.`;
   const specification = p.specification || `Product: ${p.name}\nCategory: ${p.category || 'General'}\nQuality: Premium\nUsage: Everyday use`;
   const highlights = (p.highlights || '').split('\n').map(s => s.trim()).filter(Boolean);
   const deliveryLines = (p.delivery || '').split('\n').map(s => s.trim()).filter(Boolean);
   const specItems = specification.split('\n').map(s => s.trim()).filter(Boolean);
 
-  const categoryObj = state.categories.find(c => c.slug === p.category);
-  const categoryName = categoryObj ? categoryObj.name : p.category;
+  const categoryName = tp.categoryName || p.category;
 
   const breadcrumbCategory = $('breadcrumb-category');
   const breadcrumbProduct = $('breadcrumb-product');
   breadcrumbCategory.textContent = categoryName;
-  breadcrumbProduct.textContent = p.name;
+  breadcrumbProduct.textContent = tp.name;
 
   const reviewCount = Number(p.review_count || 0);
   const avgRating = p.rating != null ? Number(p.rating) : 0;
 
   // Set share product state
-  state.shareProduct = { ...p, avgRating, reviewCount };
+  state.shareProduct = { ...p, name: tp.name, avgRating, reviewCount };
 
   // Parse sizes from product (JSON array or comma-separated string)
   let sizes = [];
@@ -2247,21 +2286,21 @@ async function renderProductDetail(id) {
   $('product-detail-content').innerHTML = `
       <div class="product-gallery">
         <div class="main-image-wrapper">
-          <img class="main-image" src="${p.image_url}" alt="${p.name}" onerror="imgFallback(this)">
+          <img class="main-image" src="${p.image_url}" alt="${escapeHtml(tp.name)}" onerror="imgFallback(this)">
         </div>
       </div>
 
       <div class="product-info">
         <span class="product-category">${categoryName}</span>
-        <h1 class="product-title">${p.name}</h1>
+        <h1 class="product-title">${tp.name}</h1>
 
         <div class="product-rating-row">
           ${reviewCount > 0
             ? `<div class="rating-stars-large">${stars(avgRating)}</div>
                <span class="rating-value-large">${avgRating.toFixed(1)}</span>
-               <span class="review-count">(${reviewCount} review${reviewCount === 1 ? '' : 's'})</span>`
-            : `<span class="no-rating">No ratings yet</span>`}
-          <button class="product-share-btn" id="pd-share-btn" aria-label="Share product" title="Share">
+               <span class="review-count">(${reviewCount} ${reviewCount === 1 ? (typeof t === 'function' ? t('review') : 'review') : (typeof t === 'function' ? t('reviews') : 'reviews')})</span>`
+            : `<span class="no-rating">${typeof t === 'function' ? t('No ratings yet') : 'No ratings yet'}</span>`}
+          <button class="product-share-btn" id="pd-share-btn" aria-label="${typeof t === 'function' ? t('Share product') : 'Share product'}" title="${typeof t === 'function' ? t('Share product') : 'Share'}">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="6.68"/></svg>
           </button>
         </div>
@@ -2269,8 +2308,8 @@ async function renderProductDetail(id) {
         <div class="product-price-row">
           ${p.discount > 0 ? `<span class="original-price">₹${parseFloat(p.price).toFixed(2)}</span>` : ''}
           <span class="current-price">₹${discounted(p).toFixed(2)}</span>
-          ${p.discount > 0 ? `<span class="discount-percent">${Number(p.discount).toFixed(0)}% off</span>` : ''}
-          <span class="tax-info">Inclusive of all taxes</span>
+          ${p.discount > 0 ? `<span class="discount-percent">${Number(p.discount).toFixed(0)}% ${typeof t === 'function' ? t('off') : 'off'}</span>` : ''}
+          <span class="tax-info">${typeof t === 'function' ? t('Inclusive of all taxes') : 'Inclusive of all taxes'}</span>
         </div>
 
         <div class="product-meta">
@@ -2278,73 +2317,73 @@ async function renderProductDetail(id) {
             ${getDeliveryOptions().map((opt, i) => `
               <label class="delivery-option ${i === 0 ? 'selected' : ''}" data-days="${opt.days}">
                 <input type="radio" name="delivery" ${i === 0 ? 'checked' : ''} style="display:none;">
-                <span class="delivery-label">${opt.label}</span>
+                <span class="delivery-label">${typeof t === 'function' ? t(opt.label) : opt.label}</span>
                 <span class="delivery-date">${opt.date}</span>
               </label>
             `).join('')}
           </div>
           <div class="pincode-checker">
-            <label class="pincode-label" for="pd-pin-code">Check Delivery to your PIN Code</label>
+            <label class="pincode-label" for="pd-pin-code">${typeof t === 'function' ? t('Check Delivery to your PIN Code') : 'Check Delivery to your PIN Code'}</label>
             <div class="pincode-input-row">
-              <input type="text" id="pd-pin-code" class="pincode-input" inputmode="numeric" maxlength="6" placeholder="Enter 6-digit PIN code" autocomplete="postal-code" aria-label="Enter 6-digit PIN code">
-              <button type="button" class="btn btn-primary btn-sm pincode-check-btn" id="pd-pin-check">Check</button>
+              <input type="text" id="pd-pin-code" class="pincode-input" inputmode="numeric" maxlength="6" placeholder="${typeof t === 'function' ? t('Enter 6-digit PIN code') : 'Enter 6-digit PIN code'}" autocomplete="postal-code" aria-label="${typeof t === 'function' ? t('Enter 6-digit PIN code') : 'Enter 6-digit PIN code'}">
+              <button type="button" class="btn btn-primary btn-sm pincode-check-btn" id="pd-pin-check">${typeof t === 'function' ? t('Check') : 'Check'}</button>
             </div>
             <p class="pincode-result" id="pd-pin-result" data-valid="unknown" role="status"></p>
           </div>
         </div>
         ${hasSizes && isClothing ? `
         <div class="product-size-selector">
-          <label class="size-label">Select Size</label>
+          <label class="size-label">${typeof t === 'function' ? t('Select Size') : 'Select Size'}</label>
           <div class="size-options" id="size-options">
             ${sizes.map(size => `
               <button type="button" class="size-btn" data-size="${size}" aria-label="Size ${size}">${size}</button>
             `).join('')}
           </div>
-          <span class="size-hint">Select a size to continue</span>
+          <span class="size-hint">${typeof t === 'function' ? t('Select a size to continue') : 'Select a size to continue'}</span>
         </div>
         ` : ''}
 
         <div class="product-actions">
           <div class="quantity-selector">
-            <label>Qty</label>
+            <label>${typeof t === 'function' ? t('Qty') : 'Qty'}</label>
             <div class="qty-control" id="pd-qty-control">
-              <button class="qty-btn" id="pd-minus" aria-label="Decrease quantity">−</button>
+              <button class="qty-btn" id="pd-minus" aria-label="${typeof t === 'function' ? t('Decrease quantity') : 'Decrease quantity'}">−</button>
               <span class="qty-value" id="pd-qty">1</span>
-              <button class="qty-btn" id="pd-plus" aria-label="Increase quantity">+</button>
+              <button class="qty-btn" id="pd-plus" aria-label="${typeof t === 'function' ? t('Increase quantity') : 'Increase quantity'}">+</button>
             </div>
           </div>
           <div class="action-buttons">
             <button class="btn btn-primary btn-lg" id="pd-add" data-id="${p.id}" data-label="Add to Cart" ${p.stock === 0 ? 'disabled' : ''}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1 4 4v4"/></svg>
-              <span class="btn-text">Add to Cart</span>
+              <span class="btn-text">${typeof t === 'function' ? t('Add to Cart') : 'Add to Cart'}</span>
             </button>
             <div class="qty-control" id="pd-cart-controls" style="display:none;">
-              <button class="qty-btn" id="pd-cart-dec" aria-label="Decrease quantity">−</button>
+              <button class="qty-btn" id="pd-cart-dec" aria-label="${typeof t === 'function' ? t('Decrease quantity') : 'Decrease quantity'}">−</button>
               <span class="qty-value" id="pd-cart-qty">1</span>
-              <button class="qty-btn" id="pd-cart-inc" aria-label="Increase quantity">+</button>
+              <button class="qty-btn" id="pd-cart-inc" aria-label="${typeof t === 'function' ? t('Increase quantity') : 'Increase quantity'}">+</button>
             </div>
             <button class="btn btn-dark btn-lg" id="pd-buy">
-              Buy Now
+              ${typeof t === 'function' ? t('Buy Now') : 'Buy Now'}
             </button>
           </div>
         </div>
 
         <div class="product-info-cards">
           <div class="product-highlights-section">
-            <h3>Highlights</h3>
+            <h3>${typeof t === 'function' ? t('Highlights') : 'Highlights'}</h3>
             <ul class="highlights-list">
-              ${highlights.length > 0 ? highlights.map(h => `<li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>${h}</li>`).join('') : '<li>Premium quality product</li><li>100% genuine</li><li>Great value for money</li>'}
+              ${highlights.length > 0 ? highlights.map(h => `<li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>${typeof translateText === 'function' ? translateText(h) : h}</li>`).join('') : '<li>Premium quality product</li><li>100% genuine</li><li>Great value for money</li>'}
             </ul>
           </div>
 
           <div class="delivery-details-section">
-            <h3>Delivery & Returns</h3>
+            <h3>${typeof t === 'function' ? t('Delivery & Returns') : 'Delivery & Returns'}</h3>
             <ul class="delivery-details-list">
-              ${deliveryLines.length > 0 ? deliveryLines.map(d => `<li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${d}</li>`).join('') : `
-                <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Free standard delivery in 3-5 working days</li>
-                <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Cash on Delivery available</li>
-                <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>30-day easy return & replacement</li>
-                <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Ships within 24 hours</li>
+              ${deliveryLines.length > 0 ? deliveryLines.map(d => `<li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${typeof translateText === 'function' ? translateText(d) : d}</li>`).join('') : `
+                <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${typeof t === 'function' ? t('Free standard delivery in 3-5 working days') : 'Free standard delivery in 3-5 working days'}</li>
+                <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${typeof t === 'function' ? t('Cash on Delivery available') : 'Cash on Delivery available'}</li>
+                <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${typeof t === 'function' ? t('30-day easy return & replacement') : '30-day easy return & replacement'}</li>
+                <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${typeof t === 'function' ? t('Ships within 24 hours') : 'Ships within 24 hours'}</li>
               `}
             </ul>
           </div>
@@ -2353,19 +2392,19 @@ async function renderProductDetail(id) {
 
       <div class="product-tabs">
         <div class="tab-headers" role="tablist">
-          <button class="tab-btn active" role="tab" aria-selected="true" data-tab="description">Description</button>
-          <button class="tab-btn" role="tab" aria-selected="false" data-tab="specifications">Specifications</button>
-          <button class="tab-btn" role="tab" aria-selected="false" data-tab="reviews">Reviews (${reviewCount})</button>
+          <button class="tab-btn active" role="tab" aria-selected="true" data-tab="description">${typeof t === 'function' ? t('Description') : 'Description'}</button>
+          <button class="tab-btn" role="tab" aria-selected="false" data-tab="specifications">${typeof t === 'function' ? t('Specifications') : 'Specifications'}</button>
+          <button class="tab-btn" role="tab" aria-selected="false" data-tab="reviews">${typeof t === 'function' ? t('Reviews') : 'Reviews'} (${reviewCount})</button>
         </div>
 
         <div class="tab-panels">
           <div class="tab-panel active" role="tabpanel" data-tab="description">
             <div class="description-content">
-              ${description.split('\n\n').map(para => `<p>${para}</p>`).join('')}
+              ${description.split('\n\n').map(para => `<p>${typeof translateText === 'function' ? translateText(para) : para}</p>`).join('')}
               ${highlights.length > 0 ? `
-              <h4>Key Features</h4>
+              <h4>${typeof t === 'function' ? t('Key Features') : 'Key Features'}</h4>
               <ul class="feature-list">
-                ${highlights.map(h => `<li>${h}</li>`).join('')}
+                ${highlights.map(h => `<li>${typeof translateText === 'function' ? translateText(h) : h}</li>`).join('')}
               </ul>` : ''}
             </div>
           </div>
@@ -2377,15 +2416,17 @@ async function renderProductDetail(id) {
                   ${specItems.slice(0, 7).map(item => {
                     const [key, ...valParts] = item.split(':');
                     const val = valParts.join(':').trim();
+                    const tKey = typeof t === 'function' ? t(key.trim()) : key.trim();
+                    const tVal = typeof translateSpecValue === 'function' ? translateSpecValue(val) : val;
                     return key.trim() && val ? `
                       <div class="spec-cell">
-                        <span class="spec-name">${key.trim()}</span>
-                        <span class="spec-value">${val}</span>
+                        <span class="spec-name">${tKey}</span>
+                        <span class="spec-value">${tVal}</span>
                       </div>` : '';
                   }).join('')}
                 </div>
               ` : `
-                <p class="no-specs">No specifications available for this product.</p>
+                <p class="no-specs">${typeof t === 'function' ? t('No specifications available for this product.') : 'No specifications available for this product.'}</p>
               `}
             </div>
           </div>
@@ -2394,7 +2435,7 @@ async function renderProductDetail(id) {
             <div id="reviews-tab-content" class="reviews-tab-content">
               <div class="reviews-loading" style="text-align: center; padding: 2rem;">
                 <div class="spinner" style="margin: 0 auto 1rem;"></div>
-                <p>Loading reviews...</p>
+                <p>${typeof t === 'function' ? t('Loading reviews...') : 'Loading reviews...'}</p>
               </div>
             </div>
           </div>
@@ -2851,19 +2892,24 @@ function renderWishlist() {
   const items = $('wishlist-items'), empty = $('wishlist-empty');
   if (state.wishlist.length === 0) { items.innerHTML = ''; empty.style.display = 'block'; return; }
   empty.style.display = 'none';
-  items.innerHTML = state.wishlist.map((w, i) => `
+  items.innerHTML = state.wishlist.map((w, i) => {
+    const tw = typeof getTranslatedProduct === 'function' ? getTranslatedProduct(w) : w;
+    const addLabel = typeof t === 'function' ? t('Add to Cart') : 'Add to Cart';
+    const wishLabel = typeof t === 'function' ? t('Remove from wishlist') : 'Remove from wishlist';
+    const shareLabel = typeof t === 'function' ? t('Share product') : 'Share product';
+    return `
     <article class="wishlist-card" style="animation-delay:${i * 0.05}s" data-id="${w.product_id}">
       <div class="wishlist-image-wrap">
-        <img class="wishlist-image" src="${w.image_url}" alt="${w.name}" loading="lazy" onerror="imgFallback(this)">
-        <button class="product-fav active" data-id="${w.product_id}" aria-label="Remove from wishlist">♥</button>
-        <button class="product-share" data-id="${w.product_id}" aria-label="Share product">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="6.68"/></svg>
+        <img class="wishlist-image" src="${w.image_url}" alt="${escapeHtml(tw.name)}" loading="lazy" onerror="imgFallback(this)">
+        <button class="product-fav active" data-id="${w.product_id}" aria-label="${wishLabel}">♥</button>
+        <button class="product-share" data-id="${w.product_id}" aria-label="${shareLabel}">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="6.68"/></svg>
         </button>
       </div>
       <div class="wishlist-info">
-        <span class="product-cat">${w.category}</span>
-        <h3 class="product-name">${w.name}</h3>
-        <p class="product-desc">${w.description || `${w.name} is selected for dependable quality and everyday value.`}</p>
+        <span class="product-cat">${escapeHtml(tw.categoryName || tw.category)}</span>
+        <h3 class="product-name">${escapeHtml(tw.name)}</h3>
+        <p class="product-desc">${escapeHtml(tw.description) || `${escapeHtml(tw.name)} is selected for dependable quality and everyday value.`}</p>
         <div class="product-rating">
           ${productRatingHTML(w)}
         </div>
@@ -2872,10 +2918,11 @@ function renderWishlist() {
             ${w.discount > 0 ? `<s class="product-price-old">₹${parseFloat(w.price).toFixed(2)} </s>` : ''}
             <span class="product-price">₹${discounted(w).toFixed(2)}</span>
           </div>
-          <button class="btn btn-primary btn-sm add-from-wishlist" data-id="${w.product_id}" data-label="Add to Cart" ${w.stock === 0 ? 'disabled' : ''}>Add to Cart</button>
+          <button class="btn btn-primary btn-sm add-from-wishlist" data-id="${w.product_id}" data-label="Add to Cart" ${w.stock === 0 ? 'disabled' : ''}>${addLabel}</button>
         </div>
       </div>
-    </article>`).join('');
+    </article>`;
+  }).join('');
   items.querySelectorAll('.product-fav').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); toggleWishlist(parseInt(b.dataset.id)); }));
   items.querySelectorAll('.add-from-wishlist').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); addToCart(parseInt(b.dataset.id), 1); }));
   items.querySelectorAll('.product-share').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); openShareModal(parseInt(b.dataset.id)); }));
@@ -2887,24 +2934,29 @@ function renderCart() {
   const items = $('cart-items'), empty = $('cart-empty'), summary = $('cart-summary');
   if (state.cart.length === 0) { items.innerHTML = ''; empty.style.display = 'block'; summary.style.display = 'none'; refreshCartDeliveryNotice(); return; }
   empty.style.display = 'none'; summary.style.display = 'block';
-  items.innerHTML = state.cart.map(i => `
+  items.innerHTML = state.cart.map(i => {
+    const ti = typeof getTranslatedProduct === 'function' ? getTranslatedProduct(i) : i;
+    const eachLabel = typeof t === 'function' ? t('each') : 'each';
+    const remLabel = typeof t === 'function' ? t('Remove') : 'Remove';
+    return `
     <div class="cart-item" data-id="${i.product_id}">
-      <img class="cart-item-img" src="${i.image_url}" alt="${i.name}" onerror="imgFallback(this)">
+      <img class="cart-item-img" src="${i.image_url}" alt="${escapeHtml(ti.name)}" onerror="imgFallback(this)">
       <div class="cart-item-info">
-        <div class="cart-item-name">${i.name}</div>
-          <div class="cart-item-description">${i.description || 'Quality product with dependable everyday performance.'}</div>
-        <div class="cart-item-price">₹${parseFloat(i.price).toFixed(2)} each</div>
+        <div class="cart-item-name">${escapeHtml(ti.name)}</div>
+        <div class="cart-item-description">${escapeHtml(ti.description) || (typeof t === 'function' ? t('Quality product with dependable everyday performance.') : 'Quality product with dependable everyday performance.')}</div>
+        <div class="cart-item-price">₹${parseFloat(i.price).toFixed(2)} ${eachLabel}</div>
         <div class="cart-item-delivery" data-id="${i.product_id}" aria-live="polite"></div>
       </div>
       <div class="cart-item-side">
         <div class="qty-control">
-          <button class="qty-btn dec" data-id="${i.product_id}" aria-label="Decrease quantity">−</button>
+          <button class="qty-btn dec" data-id="${i.product_id}" aria-label="${typeof t === 'function' ? t('Decrease quantity') : 'Decrease quantity'}">−</button>
           <span class="qty-value">${i.quantity}</span>
-          <button class="qty-btn inc" data-id="${i.product_id}" aria-label="Increase quantity">+</button>
+          <button class="qty-btn inc" data-id="${i.product_id}" aria-label="${typeof t === 'function' ? t('Increase quantity') : 'Increase quantity'}">+</button>
         </div>
-        <button class="btn btn-danger btn-sm rem" data-id="${i.product_id}">Remove</button>
+        <button class="btn btn-danger btn-sm rem" data-id="${i.product_id}">${remLabel}</button>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   items.querySelectorAll('.dec').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); updateQty(parseInt(b.dataset.id), -1); }));
   items.querySelectorAll('.inc').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); updateQty(parseInt(b.dataset.id), 1); }));
   items.querySelectorAll('.rem').forEach(b => b.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); removeItem(parseInt(b.dataset.id)); }));
@@ -2930,7 +2982,9 @@ function renderCartDeliveryStatuses(pin, results) {
       ? r.available
       : isProductDeliverable(state.cart.find(i => Number(i.product_id) === pid), pin);
     el.className = 'cart-item-delivery ' + (available ? 'available' : 'unavailable');
-    el.textContent = available ? `✓ Deliverable to ${pin}` : `✕ Not deliverable to ${pin}`;
+    const deliverableLabel = typeof t === 'function' ? t('Deliverable to') : 'Deliverable to';
+    const notDeliverableLabel = typeof t === 'function' ? t('Not deliverable to') : 'Not deliverable to';
+    el.textContent = available ? `✓ ${deliverableLabel} ${pin}` : `✕ ${notDeliverableLabel} ${pin}`;
   });
 }
 
@@ -3129,8 +3183,11 @@ function calculateQuantityDiscount(cart) {
 function renderCheckout() {
   if (state.cart.length === 0) { showView('cart'); return; }
   const box = $('checkout-items');
-  box.innerHTML = state.cart.map(i => `
-    <div class="checkout-item"><span>${i.name} × ${i.quantity}</span><span>₹${(parseFloat(i.price) * i.quantity).toFixed(2)}</span></div>`).join('');
+  box.innerHTML = state.cart.map(i => {
+    const ti = typeof getTranslatedProduct === 'function' ? getTranslatedProduct(i) : i;
+    return `
+    <div class="checkout-item"><span>${escapeHtml(ti.name)} × ${i.quantity}</span><span>₹${(parseFloat(i.price) * i.quantity).toFixed(2)}</span></div>`;
+  }).join('');
   const sub = state.cart.reduce((s, i) => s + parseFloat(i.price) * i.quantity, 0);
   
   // Calculate quantity discount
@@ -3628,15 +3685,18 @@ async function handleCheckout(e) {
     if (r.error) { showError('checkout-error', r.error); }
     else {
       const deliveryDate = getDeliveryDate();
-      const orderItems = state.cart.map(item => `
+      const orderItems = state.cart.map(item => {
+        const tit = typeof getTranslatedProduct === 'function' ? getTranslatedProduct(item) : item;
+        return `
         <div class="order-confirm-item">
-          <img src="${item.image_url}" alt="${item.name}" class="order-confirm-img" onerror="imgFallback(this)">
+          <img src="${item.image_url}" alt="${escapeHtml(tit.name)}" class="order-confirm-img" onerror="imgFallback(this)">
           <div class="order-confirm-details">
-            <h4>${item.name}</h4>
-            <span>Qty: ${item.quantity} × ₹${parseFloat(item.price).toFixed(2)}</span>
+            <h4>${escapeHtml(tit.name)}</h4>
+            <span>${typeof t === 'function' ? t('Qty') : 'Qty'}: ${item.quantity} × ₹${parseFloat(item.price).toFixed(2)}</span>
           </div>
         </div>
-      `).join('');
+      `;
+      }).join('');
       
       // Use backend calculated values for accuracy
       const sub = Number(r.subtotal) || state.cart.reduce((s, i) => s + parseFloat(i.price) * i.quantity, 0);
@@ -3650,7 +3710,7 @@ async function handleCheckout(e) {
       if (couponDiscount > 0) {
         discountHtml += `
           <div class="order-confirm-row discount">
-            <span>Coupon Discount${appliedCoupon ? ` (${appliedCoupon.code})` : ''}</span>
+            <span>${typeof t === 'function' ? t('Coupon Discount') : 'Coupon Discount'}${appliedCoupon ? ` (${appliedCoupon.code})` : ''}</span>
             <span style="color: var(--success);">-₹${couponDiscount.toFixed(2)}</span>
           </div>
         `;
@@ -3658,7 +3718,7 @@ async function handleCheckout(e) {
       if (quantityDiscount > 0) {
         discountHtml += `
           <div class="order-confirm-row discount">
-            <span>Quantity Discount</span>
+            <span>${typeof t === 'function' ? t('Quantity Discount') : 'Quantity Discount'}</span>
             <span style="color: var(--success);">-₹${quantityDiscount.toFixed(2)}</span>
           </div>
         `;
@@ -3667,15 +3727,15 @@ async function handleCheckout(e) {
       $('checkout-success').innerHTML = `
         <div class="order-confirmation">
           <div class="confirm-icon">✓</div>
-          <h3>Order Confirmed</h3>
-          <p class="order-id">Order #${r.id}</p>
+          <h3>${typeof t === 'function' ? t('Order Confirmed') : 'Order Confirmed'}</h3>
+          <p class="order-id">${typeof t === 'function' ? t('Order') : 'Order'} #${r.id}</p>
           <div class="order-confirm-items">${orderItems}</div>
           <div class="order-confirm-summary">
-            <div class="order-confirm-row"><span>Subtotal</span><span>₹${sub.toFixed(2)}</span></div>
+            <div class="order-confirm-row"><span>${typeof t === 'function' ? t('Subtotal') : 'Subtotal'}</span><span>₹${sub.toFixed(2)}</span></div>
             ${discountHtml}
-            <div class="order-confirm-row"><span>Shipping</span><span>${deliveryCharge === 0 ? 'Free' : '₹' + deliveryCharge.toFixed(2)}</span></div>
+            <div class="order-confirm-row"><span>${typeof t === 'function' ? t('Delivery Fee') : 'Shipping'}</span><span>${deliveryCharge === 0 ? (typeof t === 'function' ? t('Free') : 'Free') : '₹' + deliveryCharge.toFixed(2)}</span></div>
             <div class="order-confirm-row"><span>Tax</span><span>₹${tax.toFixed(2)}</span></div>
-            <div class="order-confirm-row total"><span>Total</span><span>₹${finalTotal.toFixed(2)}</span></div>
+            <div class="order-confirm-row total"><span>${typeof t === 'function' ? t('Total') : 'Total'}</span><span>₹${finalTotal.toFixed(2)}</span></div>
           </div>
           <div class="order-confirm-delivery">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -3683,7 +3743,7 @@ async function handleCheckout(e) {
           </div>
           <div class="order-confirm-address">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            <span><strong>Shipping Address:</strong> ${escapeHtml($('shipping-address').value.trim())}, ${escapeHtml($('shipping-city').value.trim())}, ${escapeHtml($('shipping-state').value.trim())} ${escapeHtml($('shipping-zip').value.trim())}, ${escapeHtml($('shipping-country').value.trim())}</span>
+            <span><strong>${typeof t === 'function' ? t('Shipping Address') : 'Shipping Address'}:</strong> ${escapeHtml($('shipping-address').value.trim())}, ${escapeHtml($('shipping-city').value.trim())}, ${escapeHtml($('shipping-state').value.trim())} ${escapeHtml($('shipping-zip').value.trim())}, ${escapeHtml($('shipping-country').value.trim())}</span>
           </div>
           <p class="confirm-email">Confirmation sent to ${escapeHtml($('shipping-email').value.trim())}</p>
         </div>
@@ -3713,23 +3773,29 @@ async function handleCheckout(e) {
 
     $('orders-list').innerHTML = orders.map(o => {
       const sm = statusMeta[o.status] || { label: o.status, color: '#64748b', bg: '#f8fafc', icon: '•' };
+      const statusLabel = typeof t === 'function' ? t(sm.label) : sm.label;
+      const viewDetailsLabel = typeof t === 'function' ? t('View Details') : 'View Details';
       const orderDate = new Date(o.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
       const orderTime = new Date(o.created_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
       const itemsList = (o.items && o.items.length > 0) ? o.items : [{ name: 'Product', image_url: '', quantity: 1, price: 0 }];
 
-      const itemsHtml = itemsList.map(it => `
+      const itemsHtml = itemsList.map(it => {
+        const tit = typeof getTranslatedProduct === 'function' ? getTranslatedProduct(it) : it;
+        const qtyLabel = typeof t === 'function' ? t('Qty') : 'Qty';
+        const orderLabel = typeof t === 'function' ? t('Order') : 'Order';
+        return `
         <div class="fk-product-row">
           <div class="fk-product-img-wrap">
-            <img class="fk-product-img" src="${it.image_url}" alt="${it.name}" onerror="imgFallback(this)">
+            <img class="fk-product-img" src="${it.image_url}" alt="${escapeHtml(tit.name)}" onerror="imgFallback(this)">
           </div>
           <div class="fk-product-info">
-            <div class="fk-product-name">${it.name}</div>
+            <div class="fk-product-name">${escapeHtml(tit.name)}</div>
             <div class="fk-product-meta">
-              <span class="fk-qty-badge">Qty: ${it.quantity}</span>
+              <span class="fk-qty-badge">${qtyLabel}: ${it.quantity}</span>
               <span class="fk-dot">•</span>
               <span class="fk-price-tag">₹${parseFloat(it.price || 0).toFixed(2)}</span>
               <span class="fk-dot">•</span>
-              <span class="fk-order-num">Order #${o.id}</span>
+              <span class="fk-order-num">${orderLabel} #${o.id}</span>
             </div>
             <div class="fk-order-datetime">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -3739,7 +3805,8 @@ async function handleCheckout(e) {
             </div>
           </div>
         </div>
-      `).join('');
+      `;
+      }).join('');
 
       return `
       <div class="fk-order-card" data-id="${o.id}">
@@ -3748,10 +3815,10 @@ async function handleCheckout(e) {
         </div>
         <div class="fk-order-right">
           <span class="fk-status-badge" style="color:${sm.color};background:${sm.bg};">
-            ${sm.icon} ${sm.label}
+            ${sm.icon} ${statusLabel}
           </span>
           <div class="fk-order-amount">₹${parseFloat(o.total_amount).toFixed(2)}</div>
-          <button class="fk-view-btn view-order" data-id="${o.id}">View Details</button>
+          <button class="fk-view-btn view-order" data-id="${o.id}">${viewDetailsLabel}</button>
         </div>
       </div>`;
     }).join('');
@@ -3767,15 +3834,18 @@ async function toggleOrder(card) {
   if (!box.innerHTML) {
     try {
       const o = await apiGet(`/orders/${id}`);
-      box.innerHTML = o.items.map(it => `
+      box.innerHTML = o.items.map(it => {
+        const tit = typeof getTranslatedProduct === 'function' ? getTranslatedProduct(it) : it;
+        return `
         <div class="order-item">
           <img class="order-item-img" src="${it.image_url}" alt="" onerror="this.style.background='#eee'">
           <div class="order-item-info">
-            <div class="order-item-name">${it.name}</div>
-            <div class="order-item-meta"><span>Qty: ${it.quantity}</span><span>₹${parseFloat(it.price).toFixed(2)} each</span></div>
+            <div class="order-item-name">${escapeHtml(tit.name)}</div>
+            <div class="order-item-meta"><span>${typeof t === 'function' ? t('Qty') : 'Qty'}: ${it.quantity}</span><span>₹${parseFloat(it.price).toFixed(2)} ${typeof t === 'function' ? t('each') : 'each'}</span></div>
           </div>
           <div class="order-item-price">₹${(parseFloat(it.price) * it.quantity).toFixed(2)}</div>
-        </div>`).join('');
+        </div>`;
+      }).join('');
     } catch {}
   }
   card.classList.add('expanded');
@@ -3800,48 +3870,51 @@ async function openOrder(id) {
     
     $('order-detail').innerHTML = `
       <div class="order-detail-header">
-        <div><h2 id="modal-order-title">Order #${o.id}</h2><div class="order-date">${fmtDate(o.created_at)}</div></div>
-        <span class="order-status status-${o.status}">${o.status}</span>
+        <div><h2 id="modal-order-title">${typeof t === 'function' ? t('Order') : 'Order'} #${o.id}</h2><div class="order-date">${fmtDate(o.created_at)}</div></div>
+        <span class="order-status status-${o.status}">${typeof t === 'function' ? t(o.status) : o.status}</span>
       </div>
       <div class="order-detail-grid">
-        <div class="order-detail-field"><span class="order-detail-label">Payment</span><span class="order-detail-value">${(o.payment_method || 'cod').toUpperCase()}</span></div>
-        <div class="order-detail-field"><span class="order-detail-label">Address</span><span class="order-detail-value">${o.shipping_address}</span></div>
-        <div class="order-detail-field"><span class="order-detail-label">Total</span><span class="order-detail-value">₹${parseFloat(o.total_amount).toFixed(2)}</span></div>
-        <div class="order-detail-field"><span class="order-detail-label">Items</span><span class="order-detail-value">${o.items.length}</span></div>
+        <div class="order-detail-field"><span class="order-detail-label">${typeof t === 'function' ? t('Payment') : 'Payment'}</span><span class="order-detail-value">${(o.payment_method || 'cod').toUpperCase()}</span></div>
+        <div class="order-detail-field"><span class="order-detail-label">${typeof t === 'function' ? t('Address') : 'Address'}</span><span class="order-detail-value">${escapeHtml(o.shipping_address)}</span></div>
+        <div class="order-detail-field"><span class="order-detail-label">${typeof t === 'function' ? t('Total') : 'Total'}</span><span class="order-detail-value">₹${parseFloat(o.total_amount).toFixed(2)}</span></div>
+        <div class="order-detail-field"><span class="order-detail-label">${typeof t === 'function' ? t('Items') : 'Items'}</span><span class="order-detail-value">${o.items.length}</span></div>
       </div>
       <div class="order-detail-items">
-        ${o.items.map(it => `
+        ${o.items.map(it => {
+          const tit = typeof getTranslatedProduct === 'function' ? getTranslatedProduct(it) : it;
+          return `
           <div class="order-detail-item">
             <img class="order-detail-item-img" src="${it.image_url}" alt="" onerror="this.style.background='#eee'">
             <div class="order-detail-item-info">
-              <div class="order-detail-item-name">${it.name}</div>
-              <div class="order-detail-item-meta"><span>Qty: ${it.quantity}</span><span>₹${parseFloat(it.price).toFixed(2)} each</span></div>
+              <div class="order-detail-item-name">${escapeHtml(tit.name)}</div>
+              <div class="order-detail-item-meta"><span>${typeof t === 'function' ? t('Qty') : 'Qty'}: ${it.quantity}</span><span>₹${parseFloat(it.price).toFixed(2)} ${typeof t === 'function' ? t('each') : 'each'}</span></div>
             </div>
             <div class="order-detail-item-price">₹${(parseFloat(it.price) * it.quantity).toFixed(2)}</div>
             ${isDelivered ? `
               <button class="btn btn-secondary btn-sm rate-review-item-btn" 
                 data-order-id="${o.id}" 
                 data-product-id="${it.product_id}" 
-                data-product-name="${escapeHtml(it.name)}"
+                data-product-name="${escapeHtml(tit.name)}"
                 data-product-image="${it.image_url || ''}"
                 ${currentUserReview && currentUserReview.product_id === it.product_id ? 'data-reviewed="true"' : ''}
-                aria-label="${currentUserReview && currentUserReview.product_id === it.product_id ? 'Update review for' : 'Rate & Review'} ${escapeHtml(it.name)}">
-                ${currentUserReview && currentUserReview.product_id === it.product_id ? '✏️ Update Review' : '⭐ Rate & Review'}
+                aria-label="${currentUserReview && currentUserReview.product_id === it.product_id ? (typeof t === 'function' ? t('Update Review') : 'Update Review') : (typeof t === 'function' ? t('Rate & Review') : 'Rate & Review')} ${escapeHtml(tit.name)}">
+                ${currentUserReview && currentUserReview.product_id === it.product_id ? '✏️ ' + (typeof t === 'function' ? t('Update Review') : 'Update Review') : '⭐ ' + (typeof t === 'function' ? t('Rate & Review') : 'Rate & Review')}
               </button>
             ` : ''}
-          </div>`).join('')}
+          </div>`;
+        }).join('')}
       </div>
       <div class="order-timeline">
-        <h3>Status Timeline</h3>
+        <h3>${typeof t === 'function' ? t('Status Timeline') : 'Status Timeline'}</h3>
         ${statuses.map((s, i) => `
           <div class="timeline-step ${i < idx ? 'completed' : i === idx ? 'active' : ''}">
             <div class="timeline-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
-            <div class="timeline-content"><div class="timeline-title">${s.charAt(0).toUpperCase() + s.slice(1)}</div><div class="timeline-time">${i <= idx ? fmtDate(o.updated_at || o.created_at) : 'Pending'}</div></div>
+            <div class="timeline-content"><div class="timeline-title">${typeof t === 'function' ? t(s.charAt(0).toUpperCase() + s.slice(1)) : (s.charAt(0).toUpperCase() + s.slice(1))}</div><div class="timeline-time">${i <= idx ? fmtDate(o.updated_at || o.created_at) : (typeof t === 'function' ? t('Pending') : 'Pending')}</div></div>
           </div>`).join('')}
       </div>
       <div class="order-detail-actions">
-        <button class="btn btn-secondary" id="btn-print-invoice" data-order-id="${o.id}">🖨️ Print Invoice</button>
-        <button class="btn btn-primary" id="btn-download-invoice" data-order-id="${o.id}">📥 Download Invoice</button>
+        <button class="btn btn-secondary" id="btn-print-invoice" data-order-id="${o.id}">${typeof t === 'function' ? t('Print Invoice') : '🖨️ Print Invoice'}</button>
+        <button class="btn btn-primary" id="btn-download-invoice" data-order-id="${o.id}">${typeof t === 'function' ? t('Download Invoice') : '📥 Download Invoice'}</button>
       </div>`;
     
     $('order-modal').style.display = 'flex';
