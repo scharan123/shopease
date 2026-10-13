@@ -12,8 +12,9 @@
   <script>
     (function() {
       try {
+        var user = localStorage.getItem('user');
         var saved = localStorage.getItem('theme');
-        if (saved === 'dark') {
+        if (user && saved === 'dark') {
           document.documentElement.setAttribute('data-theme', 'dark');
         } else {
           document.documentElement.setAttribute('data-theme', 'light');
@@ -45,12 +46,10 @@
         <a href="#" class="nav-link" data-view="cart" style="display:none;">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
           <span>Cart</span>
-          <span id="cart-count" class="cart-count" aria-label="Items in cart">0</span>
         </a>
         <a href="#" class="nav-link" data-view="wishlist" style="display:none;">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
           <span>Wishlist</span>
-          <span id="wishlist-count" class="wishlist-count" aria-label="Items in wishlist">0</span>
         </a>
         <a href="#" class="nav-link" data-view="orders" style="display:none;">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
@@ -139,8 +138,8 @@
         <button class="mobile-nav-close" aria-label="Close menu">&times;</button>
       </div>
       <a href="#" class="mobile-nav-link active" data-view="home"><span>Home</span></a>
-      <a href="#" class="mobile-nav-link" data-view="cart" style="display:none;"><span>Cart <span id="mobile-cart-count" class="cart-count">0</span></span></a>
-      <a href="#" class="mobile-nav-link" data-view="wishlist" style="display:none;"><span>Wishlist <span id="mobile-wishlist-count" class="wishlist-count">0</span></span></a>
+      <a href="#" class="mobile-nav-link" data-view="cart" style="display:none;"><span>Cart</span></a>
+      <a href="#" class="mobile-nav-link" data-view="wishlist" style="display:none;"><span>Wishlist</span></a>
       <a href="#" class="mobile-nav-link" data-view="orders" style="display:none;"><span>Orders</span></a>
       <a href="#" class="mobile-nav-link" data-view="referrals" style="display:none;"><span>Refer & Earn</span></a>
       <a href="#" class="mobile-nav-link" data-view="support"><span>Support</span></a>

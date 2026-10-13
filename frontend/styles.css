@@ -3317,3 +3317,75 @@ body { text-align: left; }
     justify-content: center;
   }
 }
+
+/* ===== Removed Notification Count Badges ===== */
+.cart-count,
+.wishlist-count,
+#cart-count,
+#wishlist-count,
+#mobile-cart-count,
+#mobile-wishlist-count {
+  display: none !important;
+}
+
+/* ===== Logged-out Auth Pages (Login, Register, Forgot Password, OTP, Reset) ===== */
+body.auth-page {
+  background-color: var(--bg) !important;
+  color: var(--text) !important;
+}
+
+body.auth-page .header {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+}
+
+body.auth-page .header-inner {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+body.auth-page .logo {
+  display: flex !important;
+  align-items: center !important;
+  color: #1e293b !important;
+}
+
+body.auth-page .logo-text {
+  color: #1e293b !important;
+}
+
+body.auth-page .nav {
+  display: flex !important;
+  align-items: center !important;
+  margin-left: auto !important;
+}
+
+body.auth-page .mobile-menu-btn {
+  display: none !important;
+}
+
+/* Remove Support option, Theme Toggle, and other items from logged-out auth header */
+body.auth-page #header-theme-toggle,
+body.auth-page #mobile-theme-toggle,
+body.auth-page .mobile-theme-toggle-item,
+body.auth-page [data-view="support"],
+body.auth-page .mobile-nav-link[data-view="support"],
+body.auth-page [data-view="home"],
+body.auth-page [data-view="cart"],
+body.auth-page [data-view="wishlist"],
+body.auth-page [data-view="orders"],
+body.auth-page [data-view="referrals"] {
+  display: none !important;
+}
+
+body.auth-page #nav-login {
+  display: flex !important;
+  align-items: center !important;
+  gap: var(--space-2) !important;
+  color: var(--primary) !important;
+  font-weight: 600 !important;
+}
+

@@ -1803,18 +1803,35 @@ function setAuth(user, token) {
 function logout() {
   state.user = null; state.token = null; state.cart = []; state.orders = []; state.savedAddresses = []; state.selectedAddressId = null;
   localStorage.removeItem('user'); localStorage.removeItem('token');
+  document.documentElement.setAttribute('data-theme', 'light');
+  state.currentView = 'auth';
   updateAuthUI(); showView('auth');
 }
 
 function updateAuthUI() {
   const logged = !!state.user;
+  const authViews = ['auth', 'forgot', 'otp', 'reset'];
+  const isAuthPage = !logged && authViews.includes(state.currentView);
+
+  // Toggle auth-page class on body
+  document.body.classList.toggle('auth-page', isAuthPage);
+
+  if (isAuthPage) {
+    document.documentElement.setAttribute('data-theme', 'light');
+  } else if (logged) {
+    const saved = localStorage.getItem('theme');
+    if (saved === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+  }
+
   navLinks.forEach(v => { 
     const el = document.querySelector(`[data-view="${v}"]`); 
     if (el) {
       if (v === 'auth') {
         el.style.display = logged ? 'none' : 'flex';
       } else if (v === 'support') {
-        el.style.display = 'flex'; // Support always visible
+        el.style.display = logged ? 'flex' : 'none'; // Only visible when logged in
       } else {
         el.style.display = logged ? 'flex' : 'none'; 
       }
@@ -1825,11 +1842,23 @@ function updateAuthUI() {
     if (v === 'auth') {
       l.style.display = logged ? 'none' : 'block';
     } else if (v === 'support') {
-      l.style.display = 'block'; // Support always visible
+      l.style.display = logged ? 'block' : 'none'; // Only visible when logged in
     } else {
       l.style.display = logged ? 'block' : 'none'; 
     }
   });
+
+  // Header Theme toggle visibility: hidden on logged-out auth pages, visible when logged in
+  const headerThemeToggle = $('header-theme-toggle');
+  if (headerThemeToggle) {
+    headerThemeToggle.style.display = (logged && !isAuthPage) ? 'inline-flex' : 'none';
+  }
+
+  // Mobile Theme toggle visibility: hidden on logged-out auth pages, visible when logged in
+  const mobileThemeToggleItem = document.querySelector('.mobile-theme-toggle-item');
+  if (mobileThemeToggleItem) {
+    mobileThemeToggleItem.style.display = (logged && !isAuthPage) ? 'flex' : 'none';
+  }
 
   // Profile wrapper visibility
   const profileWrapper = $('profile-wrapper');
@@ -1915,6 +1944,7 @@ function showView(view, productId) {
   sections.forEach(s => { const el = $(`${s}-section`); if (el) el.style.display = s === view ? 'block' : 'none'; });
   document.querySelectorAll('.nav-link, .mobile-nav-link').forEach(l => l.classList.toggle('active', l.dataset.view === view));
   state.currentView = view;
+  updateAuthUI();
   if (view === 'home') { loadProducts(); }
   if (view === 'cart') renderCart();
   if (view === 'wishlist') loadWishlist();
@@ -2809,7 +2839,9 @@ async function loadCart() {
 
 function updateCartCount() {
   const n = (Array.isArray(state.cart) ? state.cart : []).reduce((s, i) => s + (i.quantity || 0), 0);
-  $('cart-count').textContent = n; $('mobile-cart-count').textContent = n;
+  const ec = $('cart-count'), mc = $('mobile-cart-count');
+  if (ec) ec.textContent = n;
+  if (mc) mc.textContent = n;
 }
 
 function isInCart(productId) { return (Array.isArray(state.cart) ? state.cart : []).some(i => i.product_id === productId); }
@@ -2862,7 +2894,7 @@ async function loadWishlist() {
 function isWishlisted(id) { return (Array.isArray(state.wishlist) ? state.wishlist : []).some(w => w.product_id === id); }
 
 function updateWishlistCount() {
-  const n = state.wishlist.length;
+  const n = (Array.isArray(state.wishlist) ? state.wishlist : []).length;
   const ec = $('wishlist-count'), mc = $('mobile-wishlist-count');
   if (ec) ec.textContent = n;
   if (mc) mc.textContent = n;
@@ -5565,8 +5597,9 @@ function initHeaderThemeToggle() {
 }
 
 function initTheme() {
+  const user = localStorage.getItem('user');
   const savedTheme = localStorage.getItem('theme');
-  const isDark = savedTheme === 'dark';
+  const isDark = !!user && savedTheme === 'dark';
   applyTheme(isDark ? 'dark' : 'light', false);
   initHeaderThemeToggle();
 }
