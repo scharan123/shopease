@@ -976,7 +976,7 @@ document.addEventListener('DOMContentLoaded', handleReferralFromUrl);
 
 function init() {
   const t = localStorage.getItem('token'), u = localStorage.getItem('user');
-  if (t && u) { state.token = t; state.user = JSON.parse(u); updateAuthUI(); loadCart(); loadWishlist(); loadOrders(); loadSavedAddresses(); }
+  if (t && u) { state.token = t; state.user = JSON.parse(u); updateAuthUI(); loadCart(); loadWishlist(); loadOrders(); loadSavedAddresses(); fetchNavbarNotifications(); }
   const savedPin = localStorage.getItem('selectedPin');
   if (savedPin && isValidPin(savedPin)) {
     state.selectedPin = savedPin;
@@ -1403,6 +1403,7 @@ function bindEvents() {
 
   // Profile dropdown events
   bindProfileDropdownEvents();
+  bindNavbarNotificationEvents();
 
   bindRateReviewEvents();
 }
@@ -1420,6 +1421,7 @@ function bindProfileDropdownEvents() {
 
   function toggleProfileDropdown(trigger, dropdown, wrapper) {
     if (!trigger || !dropdown || !wrapper) return;
+    closeNavbarNotificationDropdown();
     const isOpen = dropdown.style.display !== 'none';
     if (isOpen) {
       dropdown.style.display = 'none';
@@ -1797,7 +1799,7 @@ function checkConfirm() {
 function setAuth(user, token) {
   state.user = user; state.token = token;
   localStorage.setItem('user', JSON.stringify(user)); localStorage.setItem('token', token);
-  updateAuthUI(); loadCart(); loadWishlist(); loadOrders(); loadSavedAddresses();
+  updateAuthUI(); loadCart(); loadWishlist(); loadOrders(); loadSavedAddresses(); fetchNavbarNotifications();
 }
 
 function logout() {
@@ -1805,6 +1807,10 @@ function logout() {
   localStorage.removeItem('user'); localStorage.removeItem('token');
   document.documentElement.setAttribute('data-theme', 'light');
   state.currentView = 'auth';
+  navbarNotifications = [];
+  navbarUnreadCount = 0;
+  updateNavbarNotificationBadge();
+  closeNavbarNotificationDropdown();
   updateAuthUI(); showView('auth');
 }
 
@@ -1865,6 +1871,12 @@ function updateAuthUI() {
   const mobileProfileWrapper = $('mobile-profile-wrapper');
   if (profileWrapper) profileWrapper.style.display = logged ? 'flex' : 'none';
   if (mobileProfileWrapper) mobileProfileWrapper.style.display = logged ? 'flex' : 'none';
+
+  // Notification wrapper visibility
+  const navNotificationWrapper = $('nav-notification-wrapper');
+  const mobileNavNotifications = $('mobile-nav-notifications');
+  if (navNotificationWrapper) navNotificationWrapper.style.display = (logged && !isAuthPage) ? 'block' : 'none';
+  if (mobileNavNotifications) mobileNavNotifications.style.display = (logged && !isAuthPage) ? 'block' : 'none';
 
   // Update profile info if logged in
   if (logged && state.user) {
@@ -4438,6 +4450,8 @@ function generateAndDownloadPdfInvoice(order) {
 
 function prefillSupportForm() {
   // Support form fields are left empty for the customer to fill manually
+  if ($('support-name')) $('support-name').value = '';
+  if ($('support-email')) $('support-email').value = '';
 }
 
 function onSupportTypeChange() {
@@ -4942,88 +4956,13 @@ async function handleShareAction(action, product, productUrl, shareText, encoded
   }
 }
 
-/* ===== Support Dashboard Header Functions ===== */
+/* ===== Navbar Notification System ===== */
 
-// Notification state
-let supportNotifications = [];
-let supportUnreadCount = 0;
+let navbarNotifications = [];
+let navbarUnreadCount = 0;
+let navbarNotificationDropdownOpen = false;
 
-// Profile dropdown state
-let supportProfileDropdownOpen = false;
-let supportNotificationDropdownOpen = false;
-
-// Fetch notifications from backend
-async function fetchSupportNotifications() {
-  if (!state.user) return;
-  try {
-    const data = await apiGet('/notifications/my');
-    supportNotifications = Array.isArray(data.data) ? data.data : [];
-    supportUnreadCount = data.unread_count || 0;
-    updateSupportNotificationBadge();
-    renderSupportNotificationList();
-  } catch (e) {
-    console.error('Failed to fetch notifications:', e);
-    supportNotifications = [];
-    supportUnreadCount = 0;
-    updateSupportNotificationBadge();
-    renderSupportNotificationList();
-  }
-}
-
-// Update notification badge
-function updateSupportNotificationBadge() {
-  const badge = $('support-notification-badge');
-  if (!badge) return;
-  if (supportUnreadCount > 0) {
-    badge.textContent = supportUnreadCount > 99 ? '99+' : supportUnreadCount;
-    badge.classList.add('visible');
-  } else {
-    badge.classList.remove('visible');
-  }
-}
-
-// Render notification list
-function renderSupportNotificationList() {
-  const list = $('support-notification-list');
-  const empty = list ? list.querySelector('.notification-empty') : null;
-  if (!list) return;
-  
-  if (supportNotifications.length === 0) {
-    list.innerHTML = '';
-    if (empty) empty.style.display = 'flex';
-    return;
-  }
-  
-  if (empty) empty.style.display = 'none';
-  
-  list.innerHTML = supportNotifications.map(n => `
-    <div class="notification-item ${n.is_read ? '' : 'unread'}" data-id="${n.id}" role="option" tabindex="0">
-      <div class="notification-item-content">
-        <div class="notification-item-title">
-          <svg class="notification-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-          ${escapeHtml(n.title || 'Notification')}
-        </div>
-        ${n.ticket_id ? `<div class="notification-item-ticket">Ticket #${escapeHtml(n.ticket_id)}</div>` : ''}
-        ${n.reference_id ? `<div class="notification-item-ticket">Ref #${escapeHtml(n.reference_id)}</div>` : ''}
-        <div class="notification-item-message">${escapeHtml(n.message || '')}</div>
-        <div class="notification-item-time">${formatNotificationDate(n.created_at)}</div>
-      </div>
-    </div>
-  `).join('');
-  
-  // Bind click events
-  list.querySelectorAll('.notification-item').forEach(item => {
-    item.addEventListener('click', () => handleNotificationClick(parseInt(item.dataset.id)));
-    item.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        handleNotificationClick(parseInt(item.dataset.id));
-      }
-    });
-  });
-}
-
-// Format notification date
+// Format notification date helper
 function formatNotificationDate(dateStr) {
   try {
     const d = new Date(dateStr);
@@ -5034,32 +4973,126 @@ function formatNotificationDate(dateStr) {
   }
 }
 
+// Fetch notifications from backend
+async function fetchNavbarNotifications() {
+  if (!state.user || !state.token) {
+    navbarNotifications = [];
+    navbarUnreadCount = 0;
+    updateNavbarNotificationBadge();
+    renderNavbarNotificationList();
+    return;
+  }
+  try {
+    const data = await apiGet('/notifications/my');
+    navbarNotifications = Array.isArray(data.data) ? data.data : [];
+    navbarUnreadCount = typeof data.unread_count === 'number' ? data.unread_count : 0;
+    updateNavbarNotificationBadge();
+    renderNavbarNotificationList();
+  } catch (e) {
+    console.error('Failed to fetch navbar notifications:', e);
+    navbarNotifications = [];
+    navbarUnreadCount = 0;
+    updateNavbarNotificationBadge();
+    renderNavbarNotificationList();
+  }
+}
+
+// Update notification badge - show ONLY if unread > 0, never a permanent 0
+function updateNavbarNotificationBadge() {
+  const badge = $('nav-notification-badge');
+  const mobileBadge = $('mobile-notification-badge');
+
+  if (badge) {
+    if (navbarUnreadCount > 0) {
+      badge.textContent = navbarUnreadCount > 99 ? '99+' : navbarUnreadCount;
+      badge.style.display = 'flex';
+      badge.classList.add('visible');
+    } else {
+      badge.textContent = '';
+      badge.style.display = 'none';
+      badge.classList.remove('visible');
+    }
+  }
+
+  if (mobileBadge) {
+    if (navbarUnreadCount > 0) {
+      mobileBadge.textContent = navbarUnreadCount > 99 ? '99+' : navbarUnreadCount;
+      mobileBadge.style.display = 'inline-flex';
+    } else {
+      mobileBadge.textContent = '';
+      mobileBadge.style.display = 'none';
+    }
+  }
+}
+
+// Render notification list with empty state
+function renderNavbarNotificationList() {
+  const list = $('nav-notification-list');
+  if (!list) return;
+
+  if (navbarNotifications.length === 0) {
+    list.innerHTML = `
+      <div class="notification-empty">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <p class="notification-empty-title">No new notifications</p>
+        <p class="notification-empty-text">You're all caught up!</p>
+      </div>
+    `;
+    return;
+  }
+
+  list.innerHTML = navbarNotifications.map(n => `
+    <div class="notification-item ${n.is_read ? '' : 'unread'}" data-id="${n.id}" role="option" tabindex="0">
+      <div class="notification-item-content">
+        <div class="notification-item-title">
+          <svg class="notification-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          ${escapeHtml(n.title || 'Notification')}
+        </div>
+        ${n.ticket_id ? `<div class="notification-item-ticket">Ticket #${escapeHtml(String(n.ticket_id))}</div>` : ''}
+        ${n.reference_id ? `<div class="notification-item-ticket">Ref #${escapeHtml(String(n.reference_id))}</div>` : ''}
+        <div class="notification-item-message">${escapeHtml(n.message || '')}</div>
+        <div class="notification-item-time">${formatNotificationDate(n.created_at)}</div>
+      </div>
+    </div>
+  `).join('');
+
+  list.querySelectorAll('.notification-item').forEach(item => {
+    item.addEventListener('click', () => handleNavbarNotificationClick(parseInt(item.dataset.id)));
+    item.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        handleNavbarNotificationClick(parseInt(item.dataset.id));
+      }
+    });
+  });
+}
+
 // Handle notification click - mark as read
-async function handleNotificationClick(notificationId) {
-  const notification = supportNotifications.find(n => n.id === notificationId);
+async function handleNavbarNotificationClick(notificationId) {
+  const notification = navbarNotifications.find(n => n.id === notificationId);
   if (!notification || notification.is_read) return;
-  
+
   try {
     await apiPost(`/notifications/${notificationId}/read`);
     notification.is_read = true;
-    supportUnreadCount = Math.max(0, supportUnreadCount - 1);
-    updateSupportNotificationBadge();
-    renderSupportNotificationList();
+    navbarUnreadCount = Math.max(0, navbarUnreadCount - 1);
+    updateNavbarNotificationBadge();
+    renderNavbarNotificationList();
   } catch (e) {
     console.error('Failed to mark notification as read:', e);
   }
 }
 
 // Mark all notifications as read
-async function markAllSupportNotificationsRead() {
-  if (supportUnreadCount === 0) return;
-  
+async function markAllNavbarNotificationsRead() {
+  if (navbarUnreadCount === 0 && navbarNotifications.every(n => n.is_read)) return;
+
   try {
     await apiPost('/notifications/my/read-all');
-    supportNotifications.forEach(n => n.is_read = true);
-    supportUnreadCount = 0;
-    updateSupportNotificationBadge();
-    renderSupportNotificationList();
+    navbarNotifications.forEach(n => { n.is_read = true; });
+    navbarUnreadCount = 0;
+    updateNavbarNotificationBadge();
+    renderNavbarNotificationList();
     toast('All notifications marked as read', 'success');
   } catch (e) {
     console.error('Failed to mark all as read:', e);
@@ -5068,342 +5101,134 @@ async function markAllSupportNotificationsRead() {
 }
 
 // Position notification dropdown below the bell button
-function positionNotificationDropdown() {
-  const dropdown = $('support-notification-dropdown');
-  const bell = $('support-notification-bell');
+function positionNavbarNotificationDropdown() {
+  const dropdown = $('nav-notification-dropdown');
+  const bell = $('nav-notification-bell');
   if (!dropdown || !bell) return;
-  
+
   const bellRect = bell.getBoundingClientRect();
   const dropdownWidth = 360;
   const viewportWidth = window.innerWidth;
   const viewportHeight = window.innerHeight;
   const gap = 8;
-  
+
   let top = bellRect.bottom + gap;
   let left = bellRect.right - dropdownWidth;
-  
+
   if (left < 8) {
     left = 8;
   }
-  
   if (left + dropdownWidth > viewportWidth - 8) {
     left = viewportWidth - dropdownWidth - 8;
   }
-  
   if (top + 400 > viewportHeight - 8) {
     top = bellRect.top - 400 - gap;
-    if (top < 8) {
-      top = 8;
-    }
+    if (top < 8) top = 8;
   }
-  
+
   dropdown.style.top = `${top}px`;
   dropdown.style.left = `${left}px`;
   dropdown.style.right = 'auto';
 }
 
-// Reposition dropdown if open (for scroll/resize)
-function repositionNotificationDropdownIfOpen() {
-  const dropdown = $('support-notification-dropdown');
-  if (dropdown && dropdown.style.display !== 'none') {
-    positionNotificationDropdown();
-  }
-}
-
-// Reposition profile dropdown if open (for scroll/resize)
-function repositionProfileDropdownIfOpen() {
-  const dropdown = $('support-profile-dropdown');
-  if (dropdown && dropdown.style.display !== 'none') {
-    positionSupportProfileDropdown();
-  }
-}
-
-// Combined reposition for both dropdowns
-function repositionSupportDropdownsIfOpen() {
-  repositionNotificationDropdownIfOpen();
-  repositionProfileDropdownIfOpen();
-}
-
 // Toggle notification dropdown
-function toggleSupportNotificationDropdown() {
-  const dropdown = $('support-notification-dropdown');
-  const bell = $('support-notification-bell');
+function toggleNavbarNotificationDropdown() {
+  const dropdown = $('nav-notification-dropdown');
+  const bell = $('nav-notification-bell');
   if (!dropdown || !bell) return;
-  
+
   const isOpen = dropdown.style.display !== 'none';
-  
+
   // Close profile dropdown if open
-  closeSupportProfileDropdown();
-  
+  const profileDropdown = $('profile-dropdown');
+  const profileTrigger = $('profile-trigger');
+  if (profileDropdown) profileDropdown.style.display = 'none';
+  if (profileTrigger) profileTrigger.setAttribute('aria-expanded', 'false');
+
   if (isOpen) {
-    dropdown.style.display = 'none';
-    bell.setAttribute('aria-expanded', 'false');
-    supportNotificationDropdownOpen = false;
+    closeNavbarNotificationDropdown();
   } else {
-    positionNotificationDropdown();
+    positionNavbarNotificationDropdown();
     dropdown.style.display = 'block';
     bell.setAttribute('aria-expanded', 'true');
-    supportNotificationDropdownOpen = true;
-    // Refresh notifications when opening
-    fetchSupportNotifications();
+    bell.classList.add('active');
+    navbarNotificationDropdownOpen = true;
+    fetchNavbarNotifications();
   }
 }
 
 // Close notification dropdown
-function closeSupportNotificationDropdown() {
-  const dropdown = $('support-notification-dropdown');
-  const bell = $('support-notification-bell');
-  if (!dropdown) return;
-  dropdown.style.display = 'none';
-  if (bell) bell.setAttribute('aria-expanded', 'false');
-  supportNotificationDropdownOpen = false;
-}
-
-// Position profile dropdown below the trigger button
-function positionSupportProfileDropdown() {
-  const dropdown = $('support-profile-dropdown');
-  const trigger = $('support-profile-trigger');
-  if (!dropdown || !trigger) return;
-  
-  const triggerRect = trigger.getBoundingClientRect();
-  const dropdownWidth = 260;
-  const viewportWidth = window.innerWidth;
-  const viewportHeight = window.innerHeight;
-  const gap = 8;
-  
-  let top = triggerRect.bottom + gap;
-  let left = triggerRect.right - dropdownWidth;
-  
-  if (left < 8) {
-    left = 8;
-  }
-  
-  if (left + dropdownWidth > viewportWidth - 8) {
-    left = viewportWidth - dropdownWidth - 8;
-  }
-  
-  if (top + 300 > viewportHeight - 8) {
-    top = triggerRect.top - 300 - gap;
-    if (top < 8) {
-      top = 8;
-    }
-  }
-  
-  dropdown.style.top = `${top}px`;
-  dropdown.style.left = `${left}px`;
-  dropdown.style.right = 'auto';
-}
-
-// Toggle profile dropdown
-function toggleSupportProfileDropdown() {
-  const dropdown = $('support-profile-dropdown');
-  const trigger = $('support-profile-trigger');
-  if (!dropdown || !trigger) return;
-  
-  const isOpen = dropdown.style.display !== 'none';
-  
-  // Close notification dropdown if open
-  closeSupportNotificationDropdown();
-  
-  if (isOpen) {
-    dropdown.style.display = 'none';
-    trigger.setAttribute('aria-expanded', 'false');
-    supportProfileDropdownOpen = false;
-  } else {
-    positionSupportProfileDropdown();
-    dropdown.style.display = 'block';
-    trigger.setAttribute('aria-expanded', 'true');
-    supportProfileDropdownOpen = true;
-  }
-}
-
-// Close profile dropdown
-function closeSupportProfileDropdown() {
-  const dropdown = $('support-profile-dropdown');
-  const trigger = $('support-profile-trigger');
-  if (!dropdown) return;
-  dropdown.style.display = 'none';
-  if (trigger) trigger.setAttribute('aria-expanded', 'false');
-  supportProfileDropdownOpen = false;
-}
-
-// Close all support dropdowns
-function closeAllSupportDropdowns() {
-  closeSupportNotificationDropdown();
-  closeSupportProfileDropdown();
-}
-
-// Update profile UI with user data
-function updateSupportProfileUI() {
-  if (!state.user) return;
-  
-  // Update profile trigger
-  const avatar = $('support-profile-avatar');
-  const name = $('support-profile-name');
-  
-  // Update dropdown
-  const dropdownAvatar = $('support-dropdown-avatar');
-  const dropdownName = $('support-dropdown-name');
-  const dropdownEmail = $('support-dropdown-email');
-  
-  if (state.user.profile_image) {
-    // Use profile image if available
-    const imgHtml = `<img src="${escapeHtml(state.user.profile_image)}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
-    if (avatar) avatar.innerHTML = imgHtml;
-    if (dropdownAvatar) dropdownAvatar.innerHTML = imgHtml.replace('width="24" height="24"', 'width="32" height="32"');
-  }
-  
-  if (name) name.textContent = escapeHtml(state.user.name || 'Customer');
-  if (dropdownName) dropdownName.textContent = escapeHtml(state.user.name || 'Customer');
-  if (dropdownEmail) dropdownEmail.textContent = escapeHtml(state.user.email || 'customer@email.com');
-}
-
-// Handle profile item clicks
-function handleSupportProfileItemClick(action) {
-  closeSupportProfileDropdown();
-  
-  switch (action) {
-    case 'profile':
-      // Navigate to profile page/section
-      showView('profile'); // Will need profile view or handle appropriately
-      break;
-    case 'settings':
-      // Navigate to settings
-      showView('settings'); // Will need settings view or handle appropriately
-      break;
-    case 'signout':
-      logout();
-      break;
-  }
-}
-
-// Bind support dashboard header events
-function bindSupportDashboardHeaderEvents() {
-  // Notification bell
-  const bell = $('support-notification-bell');
+function closeNavbarNotificationDropdown() {
+  const dropdown = $('nav-notification-dropdown');
+  const bell = $('nav-notification-bell');
+  if (dropdown) dropdown.style.display = 'none';
   if (bell) {
-    const newBell = bell.cloneNode(true);
-    bell.parentNode.replaceChild(newBell, bell);
-    newBell.addEventListener('click', (e) => {
-      e.stopPropagation();
-      toggleSupportNotificationDropdown();
-    });
+    bell.setAttribute('aria-expanded', 'false');
+    bell.classList.remove('active');
   }
-  
-  // Mark all as read
-  const markAllRead = $('support-mark-all-read');
-  if (markAllRead) {
-    const newMarkAllRead = markAllRead.cloneNode(true);
-    markAllRead.parentNode.replaceChild(newMarkAllRead, markAllRead);
-    newMarkAllRead.addEventListener('click', (e) => {
-      e.stopPropagation();
-      markAllSupportNotificationsRead();
-    });
-  }
-  
-  // Profile trigger
-  const profileTrigger = $('support-profile-trigger');
-  if (profileTrigger) {
-    const newTrigger = profileTrigger.cloneNode(true);
-    profileTrigger.parentNode.replaceChild(newTrigger, profileTrigger);
-    newTrigger.addEventListener('click', (e) => {
-      e.stopPropagation();
-      toggleSupportProfileDropdown();
-    });
-  }
-  
-  // Profile dropdown items
-  const profileItem = $('support-profile-item');
-  const settingsItem = $('support-settings-item');
-  const signoutItem = $('support-signout-item');
-  
-  if (profileItem) {
-    const newProfileItem = profileItem.cloneNode(true);
-    profileItem.parentNode.replaceChild(newProfileItem, profileItem);
-    newProfileItem.addEventListener('click', (e) => {
-      e.stopPropagation();
-      handleSupportProfileItemClick('profile');
-    });
-  }
-  
-  if (settingsItem) {
-    const newSettingsItem = settingsItem.cloneNode(true);
-    settingsItem.parentNode.replaceChild(newSettingsItem, settingsItem);
-    newSettingsItem.addEventListener('click', (e) => {
-      e.stopPropagation();
-      handleSupportProfileItemClick('settings');
-    });
-  }
-  
-  if (signoutItem) {
-    const newSignoutItem = signoutItem.cloneNode(true);
-    signoutItem.parentNode.replaceChild(newSignoutItem, signoutItem);
-    newSignoutItem.addEventListener('click', (e) => {
-      e.stopPropagation();
-      handleSupportProfileItemClick('signout');
-    });
-  }
-  
-  // Close dropdowns when clicking outside
-  document.addEventListener('click', (e) => {
-    const notificationWrapper = $('support-notification-wrapper');
-    const profileWrapper = $('support-profile-wrapper');
-    
-    if (notificationWrapper && !notificationWrapper.contains(e.target)) {
-      closeSupportNotificationDropdown();
-    }
-    
-    if (profileWrapper && !profileWrapper.contains(e.target)) {
-      closeSupportProfileDropdown();
-    }
-  });
-  
-  // Reposition dropdown on scroll/resize (only add once)
-  if (!state.supportDropdownListenersAdded) {
-    window.addEventListener('scroll', repositionSupportDropdownsIfOpen, { passive: true });
-    window.addEventListener('resize', repositionSupportDropdownsIfOpen);
-    state.supportDropdownListenersAdded = true;
-  }
-  
-  // Close on Escape key
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      closeAllSupportDropdowns();
-    }
-  });
-  
-  // Theme toggle
-  const themeToggle = $('support-theme-toggle');
-  if (themeToggle) {
-    const newThemeToggle = themeToggle.cloneNode(true);
-    themeToggle.parentNode.replaceChild(newThemeToggle, themeToggle);
-    newThemeToggle.addEventListener('click', () => {
-      toggleTheme();
-    });
-  }
+  navbarNotificationDropdownOpen = false;
 }
 
-// Initialize support dashboard when view is shown
-const originalShowView = showView;
-showView = function(view, productId) {
-  const result = originalShowView(view, productId);
-  if (view === 'support') {
-    updateSupportProfileUI();
-    bindSupportDashboardHeaderEvents();
-    fetchSupportNotifications();
+// Bind navbar notification events
+function bindNavbarNotificationEvents() {
+  const bell = $('nav-notification-bell');
+  if (bell) {
+    bell.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleNavbarNotificationDropdown();
+    });
   }
-  return result;
-};
 
-// Also update the prefillSupportForm to use real user data
-const originalPrefillSupportForm = prefillSupportForm;
-prefillSupportForm = function() {
-  originalPrefillSupportForm();
-  if (state.user) {
-    if ($('support-name')) $('support-name').value = state.user.name || '';
-    if ($('support-email')) $('support-email').value = state.user.email || '';
+  const markAllRead = $('nav-mark-all-read');
+  if (markAllRead) {
+    markAllRead.addEventListener('click', (e) => {
+      e.stopPropagation();
+      markAllNavbarNotificationsRead();
+    });
   }
-};
+
+  const mobileNotifBtn = $('mobile-nav-notifications');
+  if (mobileNotifBtn) {
+    mobileNotifBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const ov = document.querySelector('.mobile-nav-overlay');
+      const mb = document.querySelector('.mobile-menu-btn');
+      if (ov) ov.classList.remove('open');
+      if (mb) mb.setAttribute('aria-expanded', 'false');
+      toggleNavbarNotificationDropdown();
+    });
+  }
+
+  // Close when clicking outside
+  document.addEventListener('click', (e) => {
+    const wrapper = $('nav-notification-wrapper');
+    const dropdown = $('nav-notification-dropdown');
+    if (dropdown && dropdown.style.display !== 'none') {
+      if (wrapper && !wrapper.contains(e.target)) {
+        closeNavbarNotificationDropdown();
+      }
+    }
+  });
+
+  // Reposition on window resize/scroll
+  window.addEventListener('resize', () => {
+    if (navbarNotificationDropdownOpen) {
+      positionNavbarNotificationDropdown();
+    }
+  });
+  window.addEventListener('scroll', () => {
+    if (navbarNotificationDropdownOpen) {
+      positionNavbarNotificationDropdown();
+    }
+  }, { passive: true });
+
+  // Close on Escape
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && navbarNotificationDropdownOpen) {
+      closeNavbarNotificationDropdown();
+    }
+  });
+}
 
 function fmtDate(s) { return new Date(s).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }); }
 function showError(id, msg) { const el = $(id); if (el) { el.textContent = msg; el.style.display = 'block'; } }

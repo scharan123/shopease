@@ -3371,6 +3371,8 @@ body.auth-page .mobile-menu-btn {
 body.auth-page #header-theme-toggle,
 body.auth-page #mobile-theme-toggle,
 body.auth-page .mobile-theme-toggle-item,
+body.auth-page #nav-notification-wrapper,
+body.auth-page #mobile-nav-notifications,
 body.auth-page [data-view="support"],
 body.auth-page .mobile-nav-link[data-view="support"],
 body.auth-page [data-view="home"],
@@ -3388,4 +3390,58 @@ body.auth-page #nav-login {
   color: var(--primary) !important;
   font-weight: 600 !important;
 }
+
+/* ===== Navbar Notification Bell ===== */
+.nav-notification-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-light);
+  position: relative;
+  cursor: pointer;
+  transition: var(--transition);
+  padding: 0;
+}
+
+.nav-notification-btn:hover,
+.nav-notification-btn.active {
+  color: var(--primary);
+  background: rgba(37, 99, 235, 0.08);
+}
+
+[data-theme="dark"] .nav-notification-btn {
+  color: var(--text-light);
+}
+
+[data-theme="dark"] .nav-notification-btn:hover,
+[data-theme="dark"] .nav-notification-btn.active {
+  color: var(--primary-dark);
+  background: rgba(59, 130, 246, 0.15);
+}
+
+.nav-notification-btn .nav-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.notification-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--error);
+  color: white;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  margin-left: 8px;
+}
+
 
